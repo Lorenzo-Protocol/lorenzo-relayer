@@ -1,0 +1,121 @@
+package cmd
+
+import (
+	"fmt"
+
+	bbnclient "github.com/Lorenzo-Protocol/rpc-client/client"
+	"github.com/spf13/cobra"
+
+	"github.com/Lorenzo-Protocol/vigilante/btcclient"
+	"github.com/Lorenzo-Protocol/vigilante/config"
+	"github.com/Lorenzo-Protocol/vigilante/metrics"
+	"github.com/Lorenzo-Protocol/vigilante/reporter"
+	"github.com/Lorenzo-Protocol/vigilante/rpcserver"
+)
+
+// GetReporterCmd returns the CLI commands for the reporter
+func GetReporterCmd() *cobra.Command {
+	var lorenzoKeyDir string
+	var cfgFile = ""
+
+	cmd := &cobra.Command{
+		Use:   "reporter",
+		Short: "Vigilant reporter",
+		Run: func(_ *cobra.Command, _ []string) {
+			var (
+				err              error
+				cfg              config.Config
+				btcClient        *btcclient.Client
+				lorenzoClient    *bbnclient.Client
+				vigilantReporter *reporter.Reporter
+				server           *rpcserver.Server
+			)
+
+			// get the config from the given file or the default file
+			cfg, err = config.New(cfgFile)
+			if err != nil {
+				panic(fmt.Errorf("failed to load config: %w", err))
+			}
+			rootLogger, err := cfg.CreateLogger()
+			if err != nil {
+				panic(fmt.Errorf("failed to create logger: %w", err))
+			}
+
+			// apply the flags from CLI
+			if len(lorenzoKeyDir) != 0 {
+				cfg.Lorenzo.KeyDirectory = lorenzoKeyDir
+			}
+
+			// create BTC client and connect to BTC server
+			// Note that vigilant reporter needs to subscribe to new BTC blocks
+			btcClient, err = btcclient.NewWithBlockSubscriber(&cfg.BTC, cfg.Common.RetrySleepTime, cfg.Common.MaxRetrySleepTime, rootLogger)
+			if err != nil {
+				panic(fmt.Errorf("failed to open BTC client: %w", err))
+			}
+
+			// create Lorenzo client. Note that requests from Lorenzo client are ad hoc
+			lorenzoClient, err = bbnclient.New(&cfg.Lorenzo, nil)
+			if err != nil {
+				panic(fmt.Errorf("failed to open Lorenzo client: %w", err))
+			}
+
+			// register reporter metrics
+			reporterMetrics := metrics.NewReporterMetrics()
+
+			// create reporter
+			vigilantReporter, err = reporter.New(
+				&cfg.Reporter,
+				rootLogger,
+				btcClient,
+				lorenzoClient,
+				cfg.Common.RetrySleepTime,
+				cfg.Common.MaxRetrySleepTime,
+				reporterMetrics,
+			)
+			if err != nil {
+				panic(fmt.Errorf("failed to create vigilante reporter: %w", err))
+			}
+
+			// create RPC server
+			server, err = rpcserver.New(&cfg.GRPC, rootLogger, vigilantReporter)
+			if err != nil {
+				panic(fmt.Errorf("failed to create reporter's RPC server: %w", err))
+			}
+
+			// start normal-case execution
+			vigilantReporter.Start()
+
+			// start RPC server
+			server.Start()
+			// start Prometheus metrics server
+			addr := fmt.Sprintf("%s:%d", cfg.Metrics.Host, cfg.Metrics.ServerPort)
+			metrics.Start(addr, reporterMetrics.Registry)
+
+			// SIGINT handling stuff
+			addInterruptHandler(func() {
+				// TODO: Does this need to wait for the grpc server to finish up any requests?
+				rootLogger.Info("Stopping RPC server...")
+				server.Stop()
+				rootLogger.Info("RPC server shutdown")
+			})
+			addInterruptHandler(func() {
+				rootLogger.Info("Stopping reporter...")
+				vigilantReporter.Stop()
+				rootLogger.Info("Reporter shutdown")
+			})
+			addInterruptHandler(func() {
+				rootLogger.Info("Stopping BTC client...")
+				btcClient.Stop()
+				btcClient.WaitForShutdown()
+				rootLogger.Info("BTC client shutdown")
+			})
+
+			<-interruptHandlersDone
+			rootLogger.Info("Shutdown complete")
+
+		},
+	}
+	cmd.Flags().StringVar(&lorenzoKeyDir, "lorenzo-key-dir", "", "Directory of the Lorenzo key")
+	cmd.Flags().StringVar(&cfgFile, "config", config.DefaultConfigFile(), "config file")
+	return cmd
+}
