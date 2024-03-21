@@ -10,7 +10,6 @@ import (
 	"github.com/Lorenzo-Protocol/vigilante/config"
 	"github.com/Lorenzo-Protocol/vigilante/metrics"
 	"github.com/Lorenzo-Protocol/vigilante/reporter"
-	"github.com/Lorenzo-Protocol/vigilante/rpcserver"
 )
 
 // GetReporterCmd returns the CLI commands for the reporter
@@ -28,7 +27,6 @@ func GetReporterCmd() *cobra.Command {
 				btcClient        *btcclient.Client
 				lorenzoClient    *bbnclient.Client
 				vigilantReporter *reporter.Reporter
-				server           *rpcserver.Server
 			)
 
 			// get the config from the given file or the default file
@@ -76,28 +74,14 @@ func GetReporterCmd() *cobra.Command {
 				panic(fmt.Errorf("failed to create vigilante reporter: %w", err))
 			}
 
-			// create RPC server
-			server, err = rpcserver.New(&cfg.GRPC, rootLogger, vigilantReporter)
-			if err != nil {
-				panic(fmt.Errorf("failed to create reporter's RPC server: %w", err))
-			}
-
 			// start normal-case execution
 			vigilantReporter.Start()
 
-			// start RPC server
-			server.Start()
 			// start Prometheus metrics server
 			addr := fmt.Sprintf("%s:%d", cfg.Metrics.Host, cfg.Metrics.ServerPort)
 			metrics.Start(addr, reporterMetrics.Registry)
 
 			// SIGINT handling stuff
-			addInterruptHandler(func() {
-				// TODO: Does this need to wait for the grpc server to finish up any requests?
-				rootLogger.Info("Stopping RPC server...")
-				server.Stop()
-				rootLogger.Info("RPC server shutdown")
-			})
 			addInterruptHandler(func() {
 				rootLogger.Info("Stopping reporter...")
 				vigilantReporter.Stop()

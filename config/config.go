@@ -22,8 +22,6 @@ var (
 	defaultBtcWalletCAFile = filepath.Join(btcutil.AppDataDir("btcwallet", false), "rpc.cert")
 	defaultAppDataDir      = btcutil.AppDataDir("lorenzo-vigilante", false)
 	defaultConfigFile      = filepath.Join(defaultAppDataDir, defaultConfigFilename)
-	defaultRPCKeyFile      = filepath.Join(defaultAppDataDir, "rpc.key")
-	defaultRPCCertFile     = filepath.Join(defaultAppDataDir, "rpc.cert")
 )
 
 // Config defines the server's top level configuration
@@ -31,8 +29,6 @@ type Config struct {
 	Common   CommonConfig         `mapstructure:"common"`
 	BTC      BTCConfig            `mapstructure:"btc"`
 	Lorenzo  bbncfg.LorenzoConfig `mapstructure:"lorenzo"`
-	GRPC     GRPCConfig           `mapstructure:"grpc"`
-	GRPCWeb  GRPCWebConfig        `mapstructure:"grpc-web"`
 	Metrics  MetricsConfig        `mapstructure:"metrics"`
 	Reporter ReporterConfig       `mapstructure:"reporter"`
 }
@@ -48,14 +44,6 @@ func (cfg *Config) Validate() error {
 
 	if err := cfg.Lorenzo.Validate(); err != nil {
 		return fmt.Errorf("invalid config in lorenzo: %w", err)
-	}
-
-	if err := cfg.GRPC.Validate(); err != nil {
-		return fmt.Errorf("invalid config in grpc: %w", err)
-	}
-
-	if err := cfg.GRPCWeb.Validate(); err != nil {
-		return fmt.Errorf("invalid config in grpc-web: %w", err)
 	}
 
 	if err := cfg.Metrics.Validate(); err != nil {
@@ -83,8 +71,6 @@ func DefaultConfig() *Config {
 		Common:   DefaultCommonConfig(),
 		BTC:      DefaultBTCConfig(),
 		Lorenzo:  bbncfg.DefaultLorenzoConfig(),
-		GRPC:     DefaultGRPCConfig(),
-		GRPCWeb:  DefaultGRPCWebConfig(),
 		Metrics:  DefaultMetricsConfig(),
 		Reporter: DefaultReporterConfig(),
 	}
