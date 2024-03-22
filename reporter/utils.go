@@ -25,7 +25,7 @@ func (r *Reporter) getHeaderMsgsToSubmit(signer string, ibs []*types.IndexedBloc
 		err         error
 	)
 
-	// find the first header that is not contained in BBN header chain, then submit since this header
+	// find the first header that is not contained in Lorenzo header chain, then submit since this header
 	for i, header := range ibs {
 		blockHash := header.BlockHash()
 		var res *btclctypes.QueryContainsBytesResponse

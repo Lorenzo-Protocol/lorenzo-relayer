@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	bbncfg "github.com/Lorenzo-Protocol/rpc-client/config"
+	lrzcfg "github.com/Lorenzo-Protocol/rpc-client/config"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -28,7 +28,7 @@ var (
 type Config struct {
 	Common   CommonConfig         `mapstructure:"common"`
 	BTC      BTCConfig            `mapstructure:"btc"`
-	Lorenzo  bbncfg.LorenzoConfig `mapstructure:"lorenzo"`
+	Lorenzo  lrzcfg.LorenzoConfig `mapstructure:"lorenzo"`
 	Metrics  MetricsConfig        `mapstructure:"metrics"`
 	Reporter ReporterConfig       `mapstructure:"reporter"`
 }
@@ -70,7 +70,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Common:   DefaultCommonConfig(),
 		BTC:      DefaultBTCConfig(),
-		Lorenzo:  bbncfg.DefaultLorenzoConfig(),
+		Lorenzo:  lrzcfg.DefaultLorenzoConfig(),
 		Metrics:  DefaultMetricsConfig(),
 		Reporter: DefaultReporterConfig(),
 	}

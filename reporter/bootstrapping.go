@@ -20,12 +20,12 @@ var (
 )
 
 type consistencyCheckInfo struct {
-	bbnLatestBlockHeight uint64
-	startSyncHeight      uint64
+	lorenzoLatestBlockHeight uint64
+	startSyncHeight          uint64
 }
 
-// checkConsistency checks whether the `max(bbn_tip_height - confirmation_depth, bbn_base_height)` block is same
-// between BBN header chain and BTC main chain.` This makes sure that already confirmed chain is the same from point
+// checkConsistency checks whether the `max(lorenzo_tip_height - confirmation_depth, lorenzo_base_height)` block is same
+// between Lorenzo header chain and BTC main chain.` This makes sure that already confirmed chain is the same from point
 // of view of both chains.
 func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 
@@ -34,7 +34,7 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 		return nil, err
 	}
 
-	// Find the base height of BBN header chain
+	// Find the base height of Lorenzo header chain
 	baseRes, err := r.lorenzoClient.BTCBaseHeader()
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 	}
 
 	return &consistencyCheckInfo{
-		bbnLatestBlockHeight: tipRes.Header.Height,
+		lorenzoLatestBlockHeight: tipRes.Header.Height,
 		// we are staring from the block after already confirmed block
 		startSyncHeight: consistencyCheckHeight + 1,
 	}, nil
@@ -69,7 +69,7 @@ func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 	// if we are bootstraping, we will definitely not handle reorgs
 	r.reorgList.clear()
 
-	// ensure BTC has caught up with BBN header chain
+	// ensure BTC has caught up with Lorenzo header chain
 	if err := r.waitUntilBTCSync(); err != nil {
 		return err
 	}
@@ -99,11 +99,11 @@ func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 
 	signer := r.lorenzoClient.MustGetAddr()
 
-	r.logger.Infof("BTC height: %d. BTCLightclient height: %d. Start syncing from height %d.", btcLatestBlockHeight, consistencyInfo.bbnLatestBlockHeight, consistencyInfo.startSyncHeight)
+	r.logger.Infof("BTC height: %d. BTCLightclient height: %d. Start syncing from height %d.", btcLatestBlockHeight, consistencyInfo.lorenzoLatestBlockHeight, consistencyInfo.startSyncHeight)
 
 	// extracts and submits headers for each block in ibs
 	// Note: As we are retrieving blocks from btc cache from block just after confirmed block which
-	// we already checked for consistency, we can be sure that even if rest of the block headers is different than in Lorenzo
+	// we already checked for consistency, we can be sure that even if rest of the block headers is different from in Lorenzo
 	// due to reorg, our fork will be better than the one in Lorenzo.
 	_, err = r.ProcessHeaders(signer, ibs)
 	if err != nil {
@@ -113,7 +113,7 @@ func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 		return err
 	}
 
-	// trim cache to the latest k+w blocks on BTC (which are same as in BBN)
+	// trim cache to the latest k+w blocks on BTC (which are same as in Lorenzo)
 	maxEntries := r.btcConfirmationDepth + r.checkpointFinalizationTimeout
 	if err = r.btcCache.Resize(maxEntries); err != nil {
 		r.logger.Errorf("Failed to resize BTC cache: %v", err)
@@ -171,14 +171,14 @@ func (r *Reporter) bootstrapWithRetries(skipBlockSubscription bool) {
 }
 
 // initBTCCache fetches the blocks since T-k-w in the BTC canonical chain
-// where T is the height of the latest block in BBN header chain
+// where T is the height of the latest block in Lorenzo header chain
 func (r *Reporter) initBTCCache() error {
 	var (
-		err                  error
-		bbnLatestBlockHeight uint64
-		bbnBaseHeight        uint64
-		baseHeight           uint64
-		ibs                  []*types.IndexedBlock
+		err                      error
+		lorenzoLatestBlockHeight uint64
+		lorenzoBaseHeight        uint64
+		baseHeight               uint64
+		ibs                      []*types.IndexedBlock
 	)
 
 	r.btcCache, err = types.NewBTCCache(r.Cfg.BTCCacheSize) // TODO: give an option to be unsized
@@ -186,28 +186,28 @@ func (r *Reporter) initBTCCache() error {
 		panic(err)
 	}
 
-	// get T, i.e., total block count in BBN header chain
+	// get T, i.e., total block count in Lorenzo header chain
 	tipRes, err := r.lorenzoClient.BTCHeaderChainTip()
 	if err != nil {
 		return err
 	}
-	bbnLatestBlockHeight = tipRes.Header.Height
+	lorenzoLatestBlockHeight = tipRes.Header.Height
 
 	// Find the base height
 	baseRes, err := r.lorenzoClient.BTCBaseHeader()
 	if err != nil {
 		return err
 	}
-	bbnBaseHeight = baseRes.Header.Height
+	lorenzoBaseHeight = baseRes.Header.Height
 
 	// Fetch block since `baseHeight = T - k - w` from BTC, where
-	// - T is total block count in BBN header chain
-	// - k is btcConfirmationDepth of BBN
-	// - w is checkpointFinalizationTimeout of BBN
-	if bbnLatestBlockHeight > bbnBaseHeight+r.btcConfirmationDepth+r.checkpointFinalizationTimeout {
-		baseHeight = bbnLatestBlockHeight - r.btcConfirmationDepth - r.checkpointFinalizationTimeout + 1
+	// - T is total block count in Lorenzo header chain
+	// - k is btcConfirmationDepth of Lorenzo
+	// - w is checkpointFinalizationTimeout of Lorenzo
+	if lorenzoLatestBlockHeight > lorenzoBaseHeight+r.btcConfirmationDepth+r.checkpointFinalizationTimeout {
+		baseHeight = lorenzoLatestBlockHeight - r.btcConfirmationDepth - r.checkpointFinalizationTimeout + 1
 	} else {
-		baseHeight = bbnBaseHeight
+		baseHeight = lorenzoBaseHeight
 	}
 
 	ibs, err = r.btcClient.FindTailBlocksByHeight(baseHeight)
@@ -225,11 +225,11 @@ func (r *Reporter) initBTCCache() error {
 // It returns BTC last block hash, BTC last block height, and Lorenzo's base height.
 func (r *Reporter) waitUntilBTCSync() error {
 	var (
-		btcLatestBlockHash   *chainhash.Hash
-		btcLatestBlockHeight uint64
-		bbnLatestBlockHash   *chainhash.Hash
-		bbnLatestBlockHeight uint64
-		err                  error
+		btcLatestBlockHash       *chainhash.Hash
+		btcLatestBlockHeight     uint64
+		lorenzoLatestBlockHash   *chainhash.Hash
+		lorenzoLatestBlockHeight uint64
+		err                      error
 	)
 
 	// Retrieve hash/height of the latest block in BTC
@@ -241,22 +241,22 @@ func (r *Reporter) waitUntilBTCSync() error {
 
 	// TODO: if BTC falls behind BTCLightclient's base header, then the vigilante is incorrectly configured and should panic
 
-	// Retrieve hash/height of the latest block in BBN header chain
+	// Retrieve hash/height of the latest block in Lorenzo header chain
 	tipRes, err := r.lorenzoClient.BTCHeaderChainTip()
 	if err != nil {
 		return err
 	}
-	bbnLatestBlockHash = tipRes.Header.Hash.ToChainhash()
-	bbnLatestBlockHeight = tipRes.Header.Height
-	r.logger.Infof("BBN header chain latest block hash and height: (%v, %d)", bbnLatestBlockHash, bbnLatestBlockHeight)
+	lorenzoLatestBlockHash = tipRes.Header.Hash.ToChainhash()
+	lorenzoLatestBlockHeight = tipRes.Header.Height
+	r.logger.Infof("Lorenzo header chain latest block hash and height: (%v, %d)", lorenzoLatestBlockHash, lorenzoLatestBlockHeight)
 
-	// If BTC chain is shorter than BBN header chain, pause until BTC catches up
-	if btcLatestBlockHeight == 0 || btcLatestBlockHeight < bbnLatestBlockHeight {
-		r.logger.Infof("BTC chain (length %d) falls behind BBN header chain (length %d), wait until BTC catches up", btcLatestBlockHeight, bbnLatestBlockHeight)
+	// If BTC chain is shorter than Lorenzo header chain, pause until BTC catches up
+	if btcLatestBlockHeight == 0 || btcLatestBlockHeight < lorenzoLatestBlockHeight {
+		r.logger.Infof("BTC chain (length %d) falls behind Lorenzo header chain (length %d), wait until BTC catches up", btcLatestBlockHeight, lorenzoLatestBlockHeight)
 
-		// periodically check if BTC catches up with BBN.
+		// periodically check if BTC catches up with Lorenzo.
 		// When BTC catches up, break and continue the bootstrapping process
-		ticker := time.NewTicker(5 * time.Second) // TODO: parameterise the polling interval
+		ticker := time.NewTicker(5 * time.Second)
 		for range ticker.C {
 			_, btcLatestBlockHeight, err = r.btcClient.GetBestBlock()
 			if err != nil {
@@ -266,12 +266,12 @@ func (r *Reporter) waitUntilBTCSync() error {
 			if err != nil {
 				return err
 			}
-			bbnLatestBlockHeight = tipRes.Header.Height
-			if btcLatestBlockHeight > 0 && btcLatestBlockHeight >= bbnLatestBlockHeight {
-				r.logger.Infof("BTC chain (length %d) now catches up with BBN header chain (length %d), continue bootstrapping", btcLatestBlockHeight, bbnLatestBlockHeight)
+			lorenzoLatestBlockHeight = tipRes.Header.Height
+			if btcLatestBlockHeight > 0 && btcLatestBlockHeight >= lorenzoLatestBlockHeight {
+				r.logger.Infof("BTC chain (length %d) now catches up with Lorenzo header chain (length %d), continue bootstrapping", btcLatestBlockHeight, lorenzoLatestBlockHeight)
 				break
 			}
-			r.logger.Infof("BTC chain (length %d) still falls behind BBN header chain (length %d), keep waiting", btcLatestBlockHeight, bbnLatestBlockHeight)
+			r.logger.Infof("BTC chain (length %d) still falls behind Lorenzo header chain (length %d), keep waiting", btcLatestBlockHeight, lorenzoLatestBlockHeight)
 		}
 	}
 
@@ -283,7 +283,7 @@ func (r *Reporter) checkHeaderConsistency(consistencyCheckHeight uint64) error {
 
 	consistencyCheckBlock := r.btcCache.FindBlock(consistencyCheckHeight)
 	if consistencyCheckBlock == nil {
-		err = fmt.Errorf("cannot find the %d-th block of BBN header chain in BTC cache for initial consistency check", consistencyCheckHeight)
+		err = fmt.Errorf("cannot find the %d-th block of Lorenzo header chain in BTC cache for initial consistency check", consistencyCheckHeight)
 		panic(err)
 	}
 	consistencyCheckHash := consistencyCheckBlock.BlockHash()
@@ -299,7 +299,7 @@ func (r *Reporter) checkHeaderConsistency(consistencyCheckHeight uint64) error {
 		return err
 	}
 	if !res.Contains {
-		err = fmt.Errorf("BTC main chain is inconsistent with BBN header chain: k-deep block in BBN header chain: %v", consistencyCheckHash)
+		err = fmt.Errorf("BTC main chain is inconsistent with Lorenzo header chain: k-deep block in Lorenzo header chain: %v", consistencyCheckHash)
 		panic(err)
 	}
 	return nil

@@ -54,8 +54,8 @@ func New(
 		lorenzoClient:     lorenzoClient,
 		reorgList:         newReorgList(),
 		//TODO: get from config file
-		btcConfirmationDepth:          6,
-		checkpointFinalizationTimeout: 20,
+		btcConfirmationDepth:          10,
+		checkpointFinalizationTimeout: 100,
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
 	}, nil

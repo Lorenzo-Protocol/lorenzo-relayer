@@ -3,13 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	bbnclient "github.com/Lorenzo-Protocol/rpc-client/client"
-	"github.com/spf13/cobra"
-
+	lrzclient "github.com/Lorenzo-Protocol/rpc-client/client"
 	"github.com/Lorenzo-Protocol/vigilante/btcclient"
 	"github.com/Lorenzo-Protocol/vigilante/config"
 	"github.com/Lorenzo-Protocol/vigilante/metrics"
 	"github.com/Lorenzo-Protocol/vigilante/reporter"
+	"github.com/spf13/cobra"
 )
 
 // GetReporterCmd returns the CLI commands for the reporter
@@ -25,7 +24,7 @@ func GetReporterCmd() *cobra.Command {
 				err              error
 				cfg              config.Config
 				btcClient        *btcclient.Client
-				lorenzoClient    *bbnclient.Client
+				lorenzoClient    *lrzclient.Client
 				vigilantReporter *reporter.Reporter
 			)
 
@@ -52,7 +51,7 @@ func GetReporterCmd() *cobra.Command {
 			}
 
 			// create Lorenzo client. Note that requests from Lorenzo client are ad hoc
-			lorenzoClient, err = bbnclient.New(&cfg.Lorenzo, nil)
+			lorenzoClient, err = lrzclient.New(&cfg.Lorenzo, nil)
 			if err != nil {
 				panic(fmt.Errorf("failed to open Lorenzo client: %w", err))
 			}
