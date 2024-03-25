@@ -12,7 +12,6 @@ type BTCConfig struct {
 	DisableClientTLS  bool                      `mapstructure:"no-client-tls"`
 	CAFile            string                    `mapstructure:"ca-file"`
 	Endpoint          string                    `mapstructure:"endpoint"`
-	TargetBlockNum    int64                     `mapstructure:"target-block-num"` // this implies how soon the tx is estimated to be included in a block, e.g., 1 means the tx is estimated to be included in the next block
 	NetParams         string                    `mapstructure:"net-params"`
 	Username          string                    `mapstructure:"username"`
 	Password          string                    `mapstructure:"password"`
@@ -41,10 +40,6 @@ func (cfg *BTCConfig) Validate() error {
 		}
 	}
 
-	if cfg.TargetBlockNum <= 0 {
-		return errors.New("target-block-num should be positive")
-	}
-
 	return nil
 }
 
@@ -62,7 +57,6 @@ func DefaultBTCConfig() BTCConfig {
 		CAFile:            defaultBtcCAFile,
 		Endpoint:          DefaultRpcBtcNodeHost,
 		BtcBackend:        types.Btcd,
-		TargetBlockNum:    1,
 		NetParams:         types.BtcSimnet.String(),
 		Username:          DefaultBtcNodeRpcUser,
 		Password:          DefaultBtcNodeRpcPass,
