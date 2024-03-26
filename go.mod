@@ -304,8 +304,8 @@ require (
 replace (
 	cosmossdk.io/tools/rosetta => cosmossdk.io/tools/rosetta v0.2.1
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	//TODO: replace with ethermint url. just for test
-	github.com/evmos/ethermint => github.com/Lorenzo-Protocol/ethermint v0.22.0-lorenzo-1.0.20240325072914-823a9a38398a
+	//TODO: fix register type
+	github.com/evmos/ethermint => github.com/Lorenzo-Protocol/ethermint v0.22.0-lorenzo-1.0.20240326065642-96a2e2a31487
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
