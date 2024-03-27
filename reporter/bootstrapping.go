@@ -60,6 +60,10 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 }
 
 func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
+	defer func(start time.Time) {
+		r.logger.Infof("skipBlockSubscription is over. time used %v", time.Since(start))
+	}(time.Now())
+
 	var (
 		btcLatestBlockHeight uint64
 		ibs                  []*types.IndexedBlock
@@ -218,6 +222,71 @@ func (r *Reporter) initBTCCache() error {
 	if err = r.btcCache.Init(ibs); err != nil {
 		panic(err)
 	}
+	return nil
+}
+
+func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
+	closeGap := r.btcConfirmationDepth * 2
+	_, btcTip, err := r.btcClient.GetBestBlock()
+	if err != nil {
+		return err
+	}
+
+	lorenzoTip, err := r.lorenzoClient.BTCHeaderChainTip()
+	if err != nil {
+		return err
+	}
+	if lorenzoTip.Header.Height+closeGap >= btcTip {
+		// don't anything
+		return nil
+	}
+	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
+	defer func(start time.Time) {
+		r.logger.Infof("waitLorenzoCatchUpCloseToBTCTip is over. time used %v", time.Since(start))
+	}(time.Now())
+
+	if lorenzoTip.Header.Height+closeGap < btcTip {
+		overCh := make(chan struct{})
+		errorCh := make(chan error)
+		ibCh := make(chan *types.IndexedBlock, 10)
+		go func() {
+			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
+				ib, _, err := r.btcClient.GetBlockByHeight(h)
+				if err != nil {
+					errorCh <- err
+					return
+				}
+				ibCh <- ib
+			}
+
+			// fetch block over
+			close(overCh)
+		}()
+
+		lorenzoNewTipHeader := lorenzoTip.Header.Hash.ToChainhash()
+		signer := r.lorenzoClient.MustGetAddr()
+		for {
+			select {
+			case ib := <-ibCh:
+				if ib.Header.PrevBlock.IsEqual(lorenzoNewTipHeader) == false {
+					r.logger.Panicf("height(%d) PrevBlock(%s) is not lorenzo tip(%s)",
+						ib.Height, ib.Header.PrevBlock.String(), lorenzoNewTipHeader.String())
+				}
+
+				_, err = r.ProcessHeaders(signer, []*types.IndexedBlock{ib})
+				if err != nil {
+					panic(err)
+				}
+				currentHash := ib.Header.BlockHash()
+				lorenzoNewTipHeader = &currentHash
+			case err := <-errorCh:
+				return err
+			case <-overCh:
+				return nil
+			}
+		}
+	}
+
 	return nil
 }
 
