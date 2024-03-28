@@ -61,7 +61,7 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 
 func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 	defer func(start time.Time) {
-		r.logger.Infof("skipBlockSubscription is over. time used %v", time.Since(start))
+		r.logger.Infof("bootstrap time used %v", time.Since(start))
 	}(time.Now())
 
 	var (
@@ -242,7 +242,7 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 	}
 	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
 	defer func(start time.Time) {
-		r.logger.Infof("waitLorenzoCatchUpCloseToBTCTip is over. time used %v", time.Since(start))
+		r.logger.Infof("waitLorenzoCatchUpCloseToBTCTip time used: %v", time.Since(start))
 	}(time.Now())
 
 	if lorenzoTip.Header.Height+closeGap < btcTip {
