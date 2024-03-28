@@ -8,7 +8,7 @@ btc:
   ca-file: $TESTNET_PATH/bitcoin/rpc.cert # only need in {btcd}
   endpoint: localhost:18556 # use port 18443 for bitcoind regtest
   target-block-num: 2
-  net-params: simnet  # use regtest for bitcoind as it does not support simnet
+  net-params: testnet
   username: rpcuser
   password: rpcpass
   reconnect-attempts: 3
@@ -25,13 +25,12 @@ lorenzo:
   key-directory: $TESTNET_PATH/node0/lorenzo
   debug: true
   timeout: 20s
-  block-timeout: ~
   output-format: json
   sign-mode: direct
 metrics:
   host: 0.0.0.0
   server-port: 2112
 reporter:
-  netparams: simnet
+  netparams: testnet
   btc_cache_size: 1000
   max_headers_in_msg: 100
