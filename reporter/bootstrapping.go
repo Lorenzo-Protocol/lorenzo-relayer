@@ -61,7 +61,7 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 
 func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 	defer func(start time.Time) {
-		r.logger.Infof("bootstrap time used %v", time.Since(start))
+		r.logger.Debugf("bootstrap time used %v", time.Since(start))
 	}(time.Now())
 
 	var (
@@ -306,7 +306,7 @@ func (r *Reporter) waitUntilBTCSync() error {
 	if err != nil {
 		return err
 	}
-	r.logger.Infof("BTC latest block hash and height: (%v, %d)", btcLatestBlockHash, btcLatestBlockHeight)
+	r.logger.Debugf("BTC latest block hash and height: (%v, %d)", btcLatestBlockHash, btcLatestBlockHeight)
 
 	// TODO: if BTC falls behind BTCLightclient's base header, then the vigilante is incorrectly configured and should panic
 
