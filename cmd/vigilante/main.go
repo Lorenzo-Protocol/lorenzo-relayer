@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/cmd/vigilante/cmd"
 	"github.com/Lorenzo-Protocol/lorenzo/app/params"
-	"os"
 )
 
 // TODO: init log
