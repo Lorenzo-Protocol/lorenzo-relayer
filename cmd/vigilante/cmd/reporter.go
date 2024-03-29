@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	lrzclient "github.com/Lorenzo-Protocol/rpc-client/client"
+	lrzclient "github.com/Lorenzo-Protocol/lorenzo-sdk/client"
 	"github.com/Lorenzo-Protocol/vigilante/btcclient"
 	"github.com/Lorenzo-Protocol/vigilante/config"
 	"github.com/Lorenzo-Protocol/vigilante/metrics"
