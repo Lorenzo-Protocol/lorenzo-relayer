@@ -3,7 +3,7 @@ package netparams
 import (
 	"fmt"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/btcsuite/btcd/chaincfg"
 )
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/avast/retry-go/v4"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )

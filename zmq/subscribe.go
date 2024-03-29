@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	zmq "github.com/pebbe/zmq4"

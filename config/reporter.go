@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 const (

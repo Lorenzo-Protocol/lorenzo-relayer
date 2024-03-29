@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/reporter"
 	lrzclient "github.com/Lorenzo-Protocol/lorenzo-sdk/client"
-	"github.com/Lorenzo-Protocol/vigilante/btcclient"
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/metrics"
-	"github.com/Lorenzo-Protocol/vigilante/reporter"
 	"github.com/spf13/cobra"
 )
 

@@ -1,4 +1,4 @@
-module github.com/Lorenzo-Protocol/vigilante
+module github.com/Lorenzo-Protocol/lorenzo-relayer
 
 go 1.21
 

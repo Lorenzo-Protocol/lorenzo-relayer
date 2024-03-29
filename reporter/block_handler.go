@@ -3,7 +3,7 @@ package reporter
 import (
 	"fmt"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 // blockEventHandler handles connected and disconnected blocks from the BTC client.

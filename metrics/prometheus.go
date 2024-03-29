@@ -5,7 +5,7 @@ import (
 	_ "net/http/pprof"
 	"regexp"
 
-	"github.com/Lorenzo-Protocol/vigilante/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

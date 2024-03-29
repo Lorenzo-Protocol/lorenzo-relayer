@@ -4,10 +4,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Lorenzo-Protocol/vigilante/btcclient"
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/metrics"
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"go.uber.org/zap"
 )
 

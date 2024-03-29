@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/cmd/vigilante/cmd"
 	"github.com/Lorenzo-Protocol/lorenzo/app/params"
-	"github.com/Lorenzo-Protocol/vigilante/cmd/vigilante/cmd"
 	"os"
 )
 
