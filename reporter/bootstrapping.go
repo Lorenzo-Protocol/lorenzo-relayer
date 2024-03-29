@@ -60,6 +60,10 @@ func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
 }
 
 func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
+	defer func(start time.Time) {
+		r.logger.Debugf("bootstrap time used %v", time.Since(start))
+	}(time.Now())
+
 	var (
 		btcLatestBlockHeight uint64
 		ibs                  []*types.IndexedBlock
@@ -221,6 +225,71 @@ func (r *Reporter) initBTCCache() error {
 	return nil
 }
 
+func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
+	closeGap := r.btcConfirmationDepth * 2
+	_, btcTip, err := r.btcClient.GetBestBlock()
+	if err != nil {
+		return err
+	}
+
+	lorenzoTip, err := r.lorenzoClient.BTCHeaderChainTip()
+	if err != nil {
+		return err
+	}
+	if lorenzoTip.Header.Height+closeGap >= btcTip {
+		// don't anything
+		return nil
+	}
+	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
+	defer func(start time.Time) {
+		r.logger.Infof("waitLorenzoCatchUpCloseToBTCTip time used: %v", time.Since(start))
+	}(time.Now())
+
+	if lorenzoTip.Header.Height+closeGap < btcTip {
+		overCh := make(chan struct{})
+		errorCh := make(chan error)
+		ibCh := make(chan *types.IndexedBlock, 10)
+		go func() {
+			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
+				ib, _, err := r.btcClient.GetBlockByHeight(h)
+				if err != nil {
+					errorCh <- err
+					return
+				}
+				ibCh <- ib
+			}
+
+			// fetch block over
+			close(overCh)
+		}()
+
+		lorenzoNewTipHeader := lorenzoTip.Header.Hash.ToChainhash()
+		signer := r.lorenzoClient.MustGetAddr()
+		for {
+			select {
+			case ib := <-ibCh:
+				if ib.Header.PrevBlock.IsEqual(lorenzoNewTipHeader) == false {
+					r.logger.Panicf("height(%d) PrevBlock(%s) is not lorenzo tip(%s)",
+						ib.Height, ib.Header.PrevBlock.String(), lorenzoNewTipHeader.String())
+				}
+
+				_, err = r.ProcessHeaders(signer, []*types.IndexedBlock{ib})
+				if err != nil {
+					panic(err)
+				}
+				currentHash := ib.Header.BlockHash()
+				lorenzoNewTipHeader = &currentHash
+			case err := <-errorCh:
+				return err
+			case <-overCh:
+				return nil
+			}
+		}
+	}
+
+	return nil
+}
+
 // waitUntilBTCSync waits for BTC to synchronize until BTC is no shorter than Lorenzo's BTC light client.
 // It returns BTC last block hash, BTC last block height, and Lorenzo's base height.
 func (r *Reporter) waitUntilBTCSync() error {
@@ -237,7 +306,7 @@ func (r *Reporter) waitUntilBTCSync() error {
 	if err != nil {
 		return err
 	}
-	r.logger.Infof("BTC latest block hash and height: (%v, %d)", btcLatestBlockHash, btcLatestBlockHeight)
+	r.logger.Debugf("BTC latest block hash and height: (%v, %d)", btcLatestBlockHash, btcLatestBlockHeight)
 
 	// TODO: if BTC falls behind BTCLightclient's base header, then the vigilante is incorrectly configured and should panic
 

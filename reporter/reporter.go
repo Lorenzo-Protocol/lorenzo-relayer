@@ -79,6 +79,10 @@ func (r *Reporter) Start() {
 	}
 	r.quitMu.Unlock()
 
+	if err := r.waitLorenzoCatchUpCloseToBTCTip(); err != nil {
+		panic(err)
+	}
+
 	r.bootstrapWithRetries(false)
 
 	r.wg.Add(1)
