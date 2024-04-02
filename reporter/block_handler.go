@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
@@ -14,6 +15,21 @@ func (r *Reporter) blockEventHandler() {
 	for {
 		select {
 		case event, open := <-r.btcClient.BlockEventChan():
+			//delay block processing until the block is mature
+			for {
+				_, h, err := r.btcClient.GetBestBlock()
+				if err != nil {
+					r.logger.Warnf("Failed to get best block from BTC client: %v", err)
+					time.Sleep(time.Second)
+					continue
+				}
+				if h > r.delayBlocks+uint64(event.Height) {
+					break
+				}
+				r.logger.Debugf("Delaying block processing for %d blocks", r.delayBlocks)
+				time.Sleep(10 * time.Minute)
+			}
+
 			if !open {
 				r.logger.Errorf("Block event channel is closed")
 				return // channel closed

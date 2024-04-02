@@ -33,6 +33,9 @@ type Reporter struct {
 	started                       bool
 	quit                          chan struct{}
 	quitMu                        sync.Mutex
+
+	delayBlocks            uint64
+	delayBtcCacheBlockList []*types.IndexedBlock
 }
 
 func New(
@@ -59,6 +62,9 @@ func New(
 		checkpointFinalizationTimeout: 100,
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
+
+		// delayBlocks must be less than tip-lorenzoBaseHeight & btcConfirmationDepth
+		delayBlocks: 3,
 	}, nil
 }
 
