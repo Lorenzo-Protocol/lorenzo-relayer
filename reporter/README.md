@@ -1,6 +1,6 @@
 # reporter
 
-This package implements the vigilant reporter. The vigilant reporter is responsible for
+This package implements the lrzrelayer reporter. The lrzrelayer reporter is responsible for
 
 - syncing the latest BTC blocks with a BTC node
 - extracting headers and checkpoints from BTC blocks

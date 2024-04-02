@@ -3,8 +3,9 @@ package netparams
 import (
 	"fmt"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/btcsuite/btcd/chaincfg"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 func GetBTCParams(net string) (*chaincfg.Params, error) {

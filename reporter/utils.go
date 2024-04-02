@@ -2,11 +2,13 @@ package reporter
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"fmt"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+
+	sdkmath "cosmossdk.io/math"
 	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
 	btclctypes "github.com/Lorenzo-Protocol/lorenzo/x/btclightclient/types"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 func chunkBy[T any](items []T, chunkSize int) (chunks [][]T) {

@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/cmd/vigilante/cmd"
 	"github.com/Lorenzo-Protocol/lorenzo/app/params"
-)
 
-// TODO: init log
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/cmd/lrzrelayer/cmd"
+)
 
 func main() {
 	params.SetAddressPrefixes()
@@ -17,7 +16,7 @@ func main() {
 
 	if err := rootCmd.Execute(); err != nil {
 		switch e := err.(type) {
-		// TODO: dedicated error codes for vigilantes
+		// TODO: dedicated error codes for lrzrelayer
 		default:
 			fmt.Print(e.Error())
 			os.Exit(1)

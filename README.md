@@ -1,6 +1,6 @@
-# vigilante
+# lorenzo-relayer
 
-Vigilante program for Lorenzo. It starts its development based on [Babylon vigilante v0.8.0](https://github.com/babylonchain/vigilante/releases/tag/v0.8.0)
+Lorenzo-relayer program for Lorenzo. It starts its development based on [Babylon vigilante v0.8.0](https://github.com/babylonchain/vigilante/releases/tag/v0.8.0)
 
 ## Requirements
 
@@ -9,7 +9,7 @@ Vigilante program for Lorenzo. It starts its development based on [Babylon vigil
 
 ## Building
 
-In order to build the vigilante,
+In order to build the lrzrelayer,
 ```shell
 make build
 ```
@@ -17,5 +17,5 @@ make build
 ## Run locally
 CONFIG_DIR is the directory of config file
 ```sh
-./build/vigilante reporter --config $CONFIG_DIR/vigilante.yml
+./build/lrzrelayer reporter --config $CONFIG_DIR/lrzrelayer.yml
 ```

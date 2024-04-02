@@ -4,11 +4,12 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
-	"go.uber.org/zap"
 )
 
 type Reporter struct {
@@ -61,16 +62,16 @@ func New(
 	}, nil
 }
 
-// Start starts the goroutines necessary to manage a vigilante.
+// Start starts the goroutines necessary to manage a lrzrelayer.
 func (r *Reporter) Start() {
 	r.quitMu.Lock()
 	select {
 	case <-r.quit:
-		// Restart the vigilante goroutines after shutdown finishes.
+		// Restart the lrzrelayer goroutines after shutdown finishes.
 		r.WaitForShutdown()
 		r.quit = make(chan struct{})
 	default:
-		// Ignore when the vigilante is still running.
+		// Ignore when the lrzrelayer is still running.
 		if r.started {
 			r.quitMu.Unlock()
 			return
@@ -102,7 +103,7 @@ func (r *Reporter) quitChan() <-chan struct{} {
 	return c
 }
 
-// Stop signals all vigilante goroutines to shutdown.
+// Stop signals all lrzrelayer goroutines to shutdown.
 func (r *Reporter) Stop() {
 	r.quitMu.Lock()
 	quit := r.quit
@@ -117,7 +118,7 @@ func (r *Reporter) Stop() {
 	}
 }
 
-// ShuttingDown returns whether the vigilante is currently in the process of shutting down or not.
+// ShuttingDown returns whether the lrzrelayer is currently in the process of shutting down or not.
 func (r *Reporter) ShuttingDown() bool {
 	select {
 	case <-r.quitChan():
@@ -127,7 +128,7 @@ func (r *Reporter) ShuttingDown() bool {
 	}
 }
 
-// WaitForShutdown blocks until all vigilante goroutines have finished executing.
+// WaitForShutdown blocks until all lrzrelayer goroutines have finished executing.
 func (r *Reporter) WaitForShutdown() {
 	// TODO: let Lorenzo client WaitForShutDown
 	r.wg.Wait()

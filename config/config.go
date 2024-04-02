@@ -13,12 +13,12 @@ import (
 )
 
 const (
-	defaultConfigFilename = "vigilante.yml"
+	defaultConfigFilename = "lrzrelayer.yml"
 )
 
 var (
 	defaultBtcCAFile  = filepath.Join(btcutil.AppDataDir("btcd", false), "rpc.cert")
-	defaultAppDataDir = btcutil.AppDataDir("lorenzo-vigilante", false)
+	defaultAppDataDir = btcutil.AppDataDir("lorenzo-relayer", false)
 	defaultConfigFile = filepath.Join(defaultAppDataDir, defaultConfigFilename)
 )
 

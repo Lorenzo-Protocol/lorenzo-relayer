@@ -6,8 +6,8 @@ import (
 
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "vigilante",
-		Short: "Lorenzo vigilante",
+		Use:   "lrzrelayer",
+		Short: "Lorenzo relayer",
 	}
 	rootCmd.AddCommand(
 		GetReporterCmd(),
