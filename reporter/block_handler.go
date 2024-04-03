@@ -144,7 +144,7 @@ func (r *Reporter) handleConnectedBlocks(event *types.BlockEvent) error {
 		// after bootstrap, btcCache tip must be higher than lorenzo BTC Header tip
 		// so we make lorenzo BTC Header tip catch up
 		if lorenzoTip.Header.Height < uint64(ib.Height-1) {
-			ibs, err := r.btcCache.GetLastBlocks(lorenzoTip.Header.Height - r.delayBlocks - 1)
+			ibs, err := r.btcCache.GetLastBlocks(lorenzoTip.Header.Height + 1)
 			if err != nil {
 				return err
 			}
