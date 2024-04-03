@@ -34,8 +34,7 @@ type Reporter struct {
 	quit                          chan struct{}
 	quitMu                        sync.Mutex
 
-	delayBlocks            uint64
-	delayBtcCacheBlockList []*types.IndexedBlock
+	delayBlocks uint64
 }
 
 func New(

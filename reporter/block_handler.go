@@ -137,7 +137,21 @@ func (r *Reporter) handleConnectedBlocks(event *types.BlockEvent) error {
 			r.reorgList.clear()
 		}
 	} else {
-		headersToProcess = append(headersToProcess, ib)
+		lorenzoTip, err := r.lorenzoClient.BTCHeaderChainTip()
+		if err != nil {
+			return err
+		}
+		// after bootstrap, btcCache tip must be higher than lorenzo BTC Header tip
+		// so we make lorenzo BTC Header tip catch up
+		if lorenzoTip.Header.Height < uint64(ib.Height-1) {
+			ibs, err := r.btcCache.GetLastBlocks(lorenzoTip.Header.Height - r.delayBlocks - 1)
+			if err != nil {
+				return err
+			}
+			headersToProcess = append(headersToProcess, ibs...)
+		} else {
+			headersToProcess = append(headersToProcess, ib)
+		}
 	}
 
 	if len(headersToProcess) == 0 {
