@@ -12,6 +12,12 @@ import (
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
+const (
+	DefaultBtcConfirmationDepth          = 10
+	DefaultCheckpointFinalizationTimeout = 100
+	DefaultDelayBlocks                   = 3
+)
+
 type Reporter struct {
 	Cfg    *config.ReporterConfig
 	logger *zap.SugaredLogger
@@ -57,13 +63,13 @@ func New(
 		lorenzoClient:     lorenzoClient,
 		reorgList:         newReorgList(),
 		//TODO: get from config file
-		btcConfirmationDepth:          10,
-		checkpointFinalizationTimeout: 100,
+		btcConfirmationDepth:          DefaultBtcConfirmationDepth,
+		checkpointFinalizationTimeout: DefaultCheckpointFinalizationTimeout,
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
 
 		// delayBlocks must be less than tip-lorenzoBaseHeight & btcConfirmationDepth
-		delayBlocks: 3,
+		delayBlocks: DefaultDelayBlocks,
 	}, nil
 }
 
