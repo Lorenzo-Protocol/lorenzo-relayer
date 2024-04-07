@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
@@ -14,6 +15,21 @@ func (r *Reporter) blockEventHandler() {
 	for {
 		select {
 		case event, open := <-r.btcClient.BlockEventChan():
+			//delay block processing until the block is mature
+			for {
+				_, h, err := r.btcClient.GetBestBlock()
+				if err != nil {
+					r.logger.Warnf("Failed to get best block from BTC client: %v", err)
+					time.Sleep(time.Second)
+					continue
+				}
+				if h > r.delayBlocks+uint64(event.Height) {
+					break
+				}
+				r.logger.Debugf("Delaying block processing for %d blocks", r.delayBlocks)
+				time.Sleep(10 * time.Minute)
+			}
+
 			if !open {
 				r.logger.Errorf("Block event channel is closed")
 				return // channel closed
@@ -121,7 +137,21 @@ func (r *Reporter) handleConnectedBlocks(event *types.BlockEvent) error {
 			r.reorgList.clear()
 		}
 	} else {
-		headersToProcess = append(headersToProcess, ib)
+		lorenzoTip, err := r.lorenzoClient.BTCHeaderChainTip()
+		if err != nil {
+			return err
+		}
+		// after bootstrap, btcCache tip must be higher than lorenzo BTC Header tip
+		// so we make lorenzo BTC Header tip catch up
+		if lorenzoTip.Header.Height < uint64(ib.Height-1) {
+			ibs, err := r.btcCache.GetLastBlocks(lorenzoTip.Header.Height + 1)
+			if err != nil {
+				return err
+			}
+			headersToProcess = append(headersToProcess, ibs...)
+		} else {
+			headersToProcess = append(headersToProcess, ib)
+		}
 	}
 
 	if len(headersToProcess) == 0 {

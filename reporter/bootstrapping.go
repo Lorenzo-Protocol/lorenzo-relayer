@@ -110,6 +110,7 @@ func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 	// Note: As we are retrieving blocks from btc cache from block just after confirmed block which
 	// we already checked for consistency, we can be sure that even if rest of the block headers is different from in Lorenzo
 	// due to reorg, our fork will be better than the one in Lorenzo.
+	ibs = ibs[:len(ibs)-int(r.delayBlocks)] //only process the last delayBlocks
 	_, err = r.ProcessHeaders(signer, ibs)
 	if err != nil {
 		// this can happen when there are two contentious lrzrelayer or if our btc node is behind.
