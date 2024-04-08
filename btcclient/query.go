@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 // GetBestBlock provides similar functionality with the btcd.rpcclient.GetBestBlock function
@@ -105,4 +105,13 @@ func (c *Client) FindTailBlocksByHeight(baseHeight uint64) ([]*types.IndexedBloc
 	}
 
 	return c.getChainBlocks(baseHeight, tipIb)
+}
+
+func (c *Client) FindRangeBlocksByHeight(startHeight, endHeight uint64) ([]*types.IndexedBlock, error) {
+	endId, _, err := c.GetBlockByHeight(endHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.getChainBlocks(startHeight, endId)
 }

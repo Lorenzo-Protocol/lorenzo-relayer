@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
 	"github.com/avast/retry-go/v4"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 var (
@@ -109,9 +110,10 @@ func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
 	// Note: As we are retrieving blocks from btc cache from block just after confirmed block which
 	// we already checked for consistency, we can be sure that even if rest of the block headers is different from in Lorenzo
 	// due to reorg, our fork will be better than the one in Lorenzo.
+	ibs = ibs[:len(ibs)-int(r.delayBlocks)] //only process the last delayBlocks
 	_, err = r.ProcessHeaders(signer, ibs)
 	if err != nil {
-		// this can happen when there are two contentious vigilantes or if our btc node is behind.
+		// this can happen when there are two contentious lrzrelayer or if our btc node is behind.
 		r.logger.Errorf("Failed to submit headers: %v", err)
 		// returning error as it is up to the caller to decide what do next
 		return err
@@ -308,7 +310,7 @@ func (r *Reporter) waitUntilBTCSync() error {
 	}
 	r.logger.Debugf("BTC latest block hash and height: (%v, %d)", btcLatestBlockHash, btcLatestBlockHeight)
 
-	// TODO: if BTC falls behind BTCLightclient's base header, then the vigilante is incorrectly configured and should panic
+	// TODO: if BTC falls behind BTCLightclient's base header, then the lrzrelayer is incorrectly configured and should panic
 
 	// Retrieve hash/height of the latest block in Lorenzo header chain
 	tipRes, err := r.lorenzoClient.BTCHeaderChainTip()

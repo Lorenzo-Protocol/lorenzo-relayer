@@ -7,8 +7,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 type BTCClient interface {
@@ -19,6 +19,7 @@ type BTCClient interface {
 	GetBestBlock() (*chainhash.Hash, uint64, error)
 	GetBlockByHash(blockHash *chainhash.Hash) (*types.IndexedBlock, *wire.MsgBlock, error)
 	FindTailBlocksByHeight(height uint64) ([]*types.IndexedBlock, error)
+	FindRangeBlocksByHeight(startHeight, endHeight uint64) ([]*types.IndexedBlock, error)
 	GetBlockByHeight(height uint64) (*types.IndexedBlock, *wire.MsgBlock, error)
 	GetTxOut(txHash *chainhash.Hash, index uint32, mempool bool) (*btcjson.GetTxOutResult, error)
 	SendRawTransaction(tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)

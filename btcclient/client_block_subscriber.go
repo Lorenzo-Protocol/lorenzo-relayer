@@ -8,10 +8,10 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/netparams"
-	"github.com/Lorenzo-Protocol/vigilante/types"
-	"github.com/Lorenzo-Protocol/vigilante/zmq"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/netparams"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/zmq"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"

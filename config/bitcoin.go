@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 // BTCConfig defines configuration for the Bitcoin client

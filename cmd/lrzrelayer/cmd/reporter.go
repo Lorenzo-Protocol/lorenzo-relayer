@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
-	lrzclient "github.com/Lorenzo-Protocol/rpc-client/client"
-	"github.com/Lorenzo-Protocol/vigilante/btcclient"
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/metrics"
-	"github.com/Lorenzo-Protocol/vigilante/reporter"
+	lrzclient "github.com/Lorenzo-Protocol/lorenzo-sdk/client"
 	"github.com/spf13/cobra"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/reporter"
 )
 
 // GetReporterCmd returns the CLI commands for the reporter
@@ -18,7 +19,7 @@ func GetReporterCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "reporter",
-		Short: "Vigilant reporter",
+		Short: "Lrzrelayer reporter",
 		Run: func(_ *cobra.Command, _ []string) {
 			var (
 				err              error
@@ -70,7 +71,7 @@ func GetReporterCmd() *cobra.Command {
 				reporterMetrics,
 			)
 			if err != nil {
-				panic(fmt.Errorf("failed to create vigilante reporter: %w", err))
+				panic(fmt.Errorf("failed to create rlzrelayer reporter: %w", err))
 			}
 
 			// start normal-case execution
@@ -95,7 +96,6 @@ func GetReporterCmd() *cobra.Command {
 
 			<-interruptHandlersDone
 			rootLogger.Info("Shutdown complete")
-
 		},
 	}
 	cmd.Flags().StringVar(&lorenzoKeyDir, "lorenzo-key-dir", "", "Directory of the Lorenzo key")

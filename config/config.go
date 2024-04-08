@@ -6,22 +6,20 @@ import (
 	"os"
 	"path/filepath"
 
-	lrzcfg "github.com/Lorenzo-Protocol/rpc-client/config"
+	lrzcfg "github.com/Lorenzo-Protocol/lorenzo-sdk/config"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v2"
 )
 
 const (
-	defaultConfigFilename = "vigilante.yml"
+	defaultConfigFilename = "lrzrelayer.yml"
 )
 
 var (
-	defaultBtcCAFile       = filepath.Join(btcutil.AppDataDir("btcd", false), "rpc.cert")
-	defaultBtcWalletCAFile = filepath.Join(btcutil.AppDataDir("btcwallet", false), "rpc.cert")
-	defaultAppDataDir      = btcutil.AppDataDir("lorenzo-vigilante", false)
-	defaultConfigFile      = filepath.Join(defaultAppDataDir, defaultConfigFilename)
+	defaultBtcCAFile  = filepath.Join(btcutil.AppDataDir("btcd", false), "rpc.cert")
+	defaultAppDataDir = btcutil.AppDataDir("lorenzo-relayer", false)
+	defaultConfigFile = filepath.Join(defaultAppDataDir, defaultConfigFilename)
 )
 
 // Config defines the server's top level configuration
@@ -65,17 +63,6 @@ func DefaultConfigFile() string {
 	return defaultConfigFile
 }
 
-// DefaultConfig returns server's default configuration.
-func DefaultConfig() *Config {
-	return &Config{
-		Common:   DefaultCommonConfig(),
-		BTC:      DefaultBTCConfig(),
-		Lorenzo:  lrzcfg.DefaultLorenzoConfig(),
-		Metrics:  DefaultMetricsConfig(),
-		Reporter: DefaultReporterConfig(),
-	}
-}
-
 // New returns a fully parsed Config object from a given file directory
 func New(configFile string) (Config, error) {
 	if _, err := os.Stat(configFile); err == nil { // the given file exists, parse it
@@ -96,18 +83,4 @@ func New(configFile string) (Config, error) {
 	} else { // other errors
 		return Config{}, err
 	}
-}
-
-func WriteSample() error {
-	cfg := DefaultConfig()
-	d, err := yaml.Marshal(&cfg)
-	if err != nil {
-		return err
-	}
-	// write to file
-	err = os.WriteFile("./sample-vigilante.yml", d, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -7,10 +7,11 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/pebbe/zmq4"
 	"go.uber.org/zap"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 var (

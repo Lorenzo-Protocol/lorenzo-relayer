@@ -14,9 +14,9 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/vigilante/config"
-	"github.com/Lorenzo-Protocol/vigilante/types"
-	"github.com/Lorenzo-Protocol/vigilante/zmq"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/zmq"
 )
 
 var _ BTCClient = &Client{}

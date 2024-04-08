@@ -3,7 +3,7 @@ package btcclient
 import (
 	"time"
 
-	"github.com/Lorenzo-Protocol/vigilante/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/lightningnetwork/lnd/chainntnfs"
 )
 

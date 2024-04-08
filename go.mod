@@ -1,4 +1,4 @@
-module github.com/Lorenzo-Protocol/vigilante
+module github.com/Lorenzo-Protocol/lorenzo-relayer
 
 go 1.21
 
@@ -34,12 +34,12 @@ require (
 	golang.org/x/net v0.20.0 // indirect
 	google.golang.org/grpc v1.61.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
 	github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240321031221-427ae932021e
-	github.com/Lorenzo-Protocol/rpc-client v0.0.0-20240321024209-697c9ea18074
+	github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240401020338-9e867a6dbb4c
 )
 
 require (
@@ -112,7 +112,6 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.10.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff // indirect
-	github.com/gin-gonic/gin v1.8.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

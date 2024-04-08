@@ -5,11 +5,12 @@ import (
 	_ "net/http/pprof"
 	"regexp"
 
-	"github.com/Lorenzo-Protocol/vigilante/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
 )
 
 func Start(addr string, reg *prometheus.Registry) {
