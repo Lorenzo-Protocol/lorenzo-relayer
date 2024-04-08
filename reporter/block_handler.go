@@ -7,6 +7,10 @@ import (
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
+const (
+	BTCAverageBlockTime = 10 * time.Minute
+)
+
 // blockEventHandler handles connected and disconnected blocks from the BTC client.
 func (r *Reporter) blockEventHandler() {
 	defer r.wg.Done()
@@ -27,7 +31,7 @@ func (r *Reporter) blockEventHandler() {
 					break
 				}
 				r.logger.Debugf("Delaying block processing for %d blocks", r.delayBlocks)
-				time.Sleep(10 * time.Minute)
+				time.Sleep(BTCAverageBlockTime)
 			}
 
 			if !open {
