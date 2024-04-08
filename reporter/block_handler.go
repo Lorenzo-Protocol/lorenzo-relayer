@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	BTCAverageBlockTime = 10 * time.Minute
+	BlockEventCheckInterval = time.Minute
 )
 
 // blockEventHandler handles connected and disconnected blocks from the BTC client.
@@ -31,7 +31,7 @@ func (r *Reporter) blockEventHandler() {
 					break
 				}
 				r.logger.Debugf("Delaying block processing for %d blocks", r.delayBlocks)
-				time.Sleep(BTCAverageBlockTime)
+				time.Sleep(BlockEventCheckInterval)
 			}
 
 			if !open {
@@ -60,6 +60,20 @@ func (r *Reporter) blockEventHandler() {
 
 // handleConnectedBlocks handles connected blocks from the BTC client.
 func (r *Reporter) handleConnectedBlocks(event *types.BlockEvent) error {
+	// After delay three blocks, we hope the connected block is on the best chain, otherwise restart bootstrap.
+	// It is just to reduce branching on Lorenzo side.
+	{
+		ib, _, err := r.btcClient.GetBlockByHeight(uint64(event.Height))
+		if err != nil {
+			return err
+		}
+		eventBlockHash := event.Header.BlockHash()
+		ibBlockHash := ib.BlockHash()
+		if !eventBlockHash.IsEqual(&ibBlockHash) {
+			return fmt.Errorf("connected block[%s] isn't one the best chain", eventBlockHash.String())
+		}
+	}
+
 	// if the header is too early, ignore it
 	// NOTE: this might happen when bootstrapping is triggered after the reporter
 	// has subscribed to the BTC blocks
