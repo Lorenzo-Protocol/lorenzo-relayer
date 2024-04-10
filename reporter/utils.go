@@ -3,6 +3,7 @@ package reporter
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
@@ -93,6 +94,10 @@ func (r *Reporter) submitHeaderMsgs(msg *btclctypes.MsgInsertHeaders) error {
 // ProcessHeaders extracts and reports headers from a list of blocks
 // It returns the number of headers that need to be reported (after deduplication)
 func (r *Reporter) ProcessHeaders(signer string, ibs []*types.IndexedBlock) (int, error) {
+	defer func(start time.Time) {
+		r.logger.Infof("Processed block height %d to %d in %s", ibs[0].Height, ibs[len(ibs)-1].Height, time.Since(start))
+	}(time.Now())
+
 	// get a list of MsgInsertHeader msgs with headers to be submitted
 	headerMsgsToSubmit, err := r.getHeaderMsgsToSubmit(signer, ibs)
 	if err != nil {
