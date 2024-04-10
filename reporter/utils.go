@@ -95,7 +95,7 @@ func (r *Reporter) submitHeaderMsgs(msg *btclctypes.MsgInsertHeaders) error {
 // It returns the number of headers that need to be reported (after deduplication)
 func (r *Reporter) ProcessHeaders(signer string, ibs []*types.IndexedBlock) (int, error) {
 	defer func(start time.Time) {
-		r.logger.Infof("Processed block height %d to %d in %s", ibs[0].Height, ibs[len(ibs)-1].Height, time.Since(start))
+		r.logger.Infof("Processed block height %d to %d, time used: %v", ibs[0].Height, ibs[len(ibs)-1].Height, time.Since(start))
 	}(time.Now())
 
 	// get a list of MsgInsertHeader msgs with headers to be submitted
