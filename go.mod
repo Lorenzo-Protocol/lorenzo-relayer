@@ -38,8 +38,8 @@ require (
 )
 
 require (
-	github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240321031221-427ae932021e
-	github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240401020338-9e867a6dbb4c
+	github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240408083236-f611177cf39f
+	github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240409101453-8cc0c004872b
 )
 
 require (
@@ -164,6 +164,7 @@ require (
 	github.com/jackc/pgx/v4 v4.13.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
+	github.com/jinzhu/copier v0.4.0
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect

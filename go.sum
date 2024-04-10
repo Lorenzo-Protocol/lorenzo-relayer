@@ -217,8 +217,11 @@ github.com/Lorenzo-Protocol/ethermint v0.22.0-rpc-client-1 h1:MnYOjaXsn1XkcsLyiT
 github.com/Lorenzo-Protocol/ethermint v0.22.0-rpc-client-1/go.mod h1:JEhGmVj5rZX5bTfOqh3nltE2N6+qMI4HVNV2vW6PpOQ=
 github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240321031221-427ae932021e h1:S47quEGm9cnHDI3Z4xjg19W7PrIknD59BRK9aqvjT24=
 github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240321031221-427ae932021e/go.mod h1:uWY9du1mUCW8x8/mpCIuFRFGkD9jlnb0x1cUrzxovIo=
+github.com/Lorenzo-Protocol/lorenzo v0.0.0-20240408083236-f611177cf39f/go.mod h1:U2SWigR1rqAsFdc1qrKFhysjUMRNC1MLxApvemQosvQ=
 github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240401020338-9e867a6dbb4c h1:CzHhFqQZrkLGu9CegbP8UoYofnmGjUMNxGi/+0SAWkU=
 github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240401020338-9e867a6dbb4c/go.mod h1:u/MtZIYBCDUaU5jQTqbssNS/uwcswwLtt9sMVzq/ZLk=
+github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240409101453-8cc0c004872b h1:+X65Djkg93060AbC0LMBRD5oi+u1eESFpdNKQJ8CqsI=
+github.com/Lorenzo-Protocol/lorenzo-sdk v0.0.0-20240409101453-8cc0c004872b/go.mod h1:Up9VePLBzVncN1LhwQDgULdzwNhqEg23FhLVmXsAA+w=
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Masterminds/semver/v3 v3.2.0 h1:3MEsd0SM6jqZojhjLWWeBY+Kcjy9i6MQAeY7YgDP83g=
@@ -857,6 +860,8 @@ github.com/jessevdk/go-flags v1.4.0 h1:4IU2WS7AumrZ/40jfhf4QVDMsQwqA7VEHozFRrGAR
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jhump/protoreflect v1.15.3 h1:6SFRuqU45u9hIZPJAoZ8c28T3nK64BNdp9w6jFonzls=
 github.com/jhump/protoreflect v1.15.3/go.mod h1:4ORHmSBmlCW8fh3xHmJMGyul1zNqZK4Elxc8qKP+p1k=
+github.com/jinzhu/copier v0.4.0 h1:w3ciUoD19shMCRargcpm0cm91ytaBhDvuRpz1ODO/U8=
+github.com/jinzhu/copier v0.4.0/go.mod h1:DfbEm0FYsaqBcKcFuvmOZb218JkPGtvSHsKg8S8hyyg=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=

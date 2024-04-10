@@ -11,6 +11,7 @@ func NewRootCmd() *cobra.Command {
 	}
 	rootCmd.AddCommand(
 		GetReporterCmd(),
+		SendBTCCmd(),
 	)
 
 	return rootCmd
