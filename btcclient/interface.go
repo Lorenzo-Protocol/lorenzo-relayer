@@ -40,4 +40,5 @@ type BTCWallet interface {
 	WalletPassphrase(passphrase string, timeoutSecs int64) error
 	DumpPrivKey(address btcutil.Address) (*btcutil.WIF, error)
 	GetHighUTXOAndSum() (*btcjson.ListUnspentResult, float64, error)
+	GetUTXO(btcutil.Amount) ([]btcjson.ListUnspentResult, error)
 }

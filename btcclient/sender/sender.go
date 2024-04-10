@@ -15,7 +15,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
@@ -40,55 +39,55 @@ func New(
 	}
 }
 
-func (s *Sender) SendBTCtoLorenzoVault(targetAddressOnLorenzoChain []byte, amount btcutil.Amount) error {
+func (s *Sender) SendBTCtoLorenzoVault(targetAddressOnLorenzoChain []byte, amount btcutil.Amount) (*types.BtcTxInfo, error) {
 	if len(targetAddressOnLorenzoChain) != 20 {
-		return fmt.Errorf("invalid target address on lorenzo chain , must be a valid EVM address")
+		return nil, fmt.Errorf("invalid target address on lorenzo chain , must be a valid EVM address")
 	}
 
-	utxo, err := s.PickOneUTXO(amount)
+	utxos, err := s.PickUTXOs(amount)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// recipient is a change address that all the
-	// remaining balance of the utxo is sent to
-	tx1, err := s.buildTxWithData(
-		utxo,
+
+	tx, err := s.buildTxWithData(
+		utxos,
 		s.vaultAddress.ScriptAddress(),
 		amount,
 		targetAddressOnLorenzoChain,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to add data to tx: %w", err)
+		return nil, fmt.Errorf("failed to add data to tx: %w", err)
 	}
 
-	tx1.TxId, err = s.sendTxToBTC(tx1.Tx)
+	tx.TxId, err = s.sendTxToBTC(tx.Tx)
 	if err != nil {
-		return fmt.Errorf("failed to send tx1 to BTC: %w", err)
+		return nil, fmt.Errorf("failed to send tx1 to BTC: %w", err)
 	}
-	return nil
+
+	return tx, nil
 }
 
 // calcMinRelayFee returns the minimum transaction fee required for a
 // transaction with the passed serialized size to be accepted into the memory
 // pool and relayed.
 // Adapted from https://github.com/btcsuite/btcd/blob/f9cbff0d819c951d20b85714cf34d7f7cc0a44b7/mempool/policy.go#L61
-func (rl *Sender) calcMinRelayFee(txVirtualSize int64) btcutil.Amount {
+func (rl *Sender) calcMinFee(txVirtualSize int64) btcutil.Amount {
 	// Calculate the minimum fee for a transaction to be allowed into the
 	// mempool and relayed by scaling the base fee (which is the minimum
 	// free transaction relay fee).
-	minRelayFeeRate := rl.RelayFeePerKW().FeePerKVByte()
+	minFeeRate := rl.RelayFeePerKW().FeePerKVByte()
 
-	rl.logger.Debugf("current minimum relay fee rate is %v", minRelayFeeRate)
+	rl.logger.Debugf("current minimum fee rate is %v", minFeeRate)
 
-	minRelayFee := minRelayFeeRate.FeeForVSize(txVirtualSize)
+	minFee := minFeeRate.FeeForVSize(txVirtualSize)
 
 	// Set the minimum fee to the maximum possible value if the calculated
 	// fee is not in the valid range for monetary amounts.
-	if minRelayFee > btcutil.MaxSatoshi {
-		minRelayFee = btcutil.MaxSatoshi
+	if minFee > btcutil.MaxSatoshi {
+		minFee = btcutil.MaxSatoshi
 	}
 
-	return minRelayFee
+	return minFee
 }
 
 func (rl *Sender) dumpPrivKeyAndSignTx(tx *wire.MsgTx, utxo *types.UTXO) (*wire.MsgTx, error) {
@@ -133,20 +132,20 @@ func (rl *Sender) PickHighUTXO() (*types.UTXO, error) {
 }
 
 // PickHighUTXO picks a UTXO that has the highest amount
-func (rl *Sender) PickOneUTXO(amount btcutil.Amount) (*types.UTXO, error) {
-	// get the highest UTXO and UTXOs' sum in the list
-	topUTXO, _, err := rl.BTCWallet.GetHighUTXOAndSum()
+func (rl *Sender) PickUTXOs(amount btcutil.Amount) ([]*types.UTXO, error) {
+	unspendUtxos, err := rl.BTCWallet.GetUTXO(amount)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: just get <amount> sats utxo
-	utxo, err := types.NewUTXO(topUTXO, rl.GetNetParams())
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert ListUnspentResult to UTXO: %w", err)
+	var utxos []*types.UTXO
+	for _, utxo := range unspendUtxos {
+		utxo, err := types.NewUTXO(&utxo, rl.GetNetParams())
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert ListUnspentResult to UTXO: %w", err)
+		}
+		utxos = append(utxos, utxo)
 	}
-	rl.logger.Debugf("pick utxo with id: %v, amount: %v, confirmations: %v", utxo.TxID, utxo.Amount, topUTXO.Confirmations)
-
-	return utxo, nil
+	return utxos, nil
 }
 
 // buildTxWithData builds a tx with data inserted as OP_RETURN
@@ -154,24 +153,25 @@ func (rl *Sender) PickOneUTXO(amount btcutil.Amount) (*types.UTXO, error) {
 // and the rest of the balance is sent to a new change address
 // as the second output with index 1
 func (rl *Sender) buildTxWithData(
-	utxo *types.UTXO,
+	utxos []*types.UTXO,
 	pkScript []byte,
-	value btcutil.Amount,
+	amount btcutil.Amount,
 	data []byte,
 ) (*types.BtcTxInfo, error) {
-	rl.logger.Debugf("Building a BTC tx using %v with data %x", utxo.TxID.String(), data)
 	tx := wire.NewMsgTx(wire.TxVersion)
 
-	outPoint := wire.NewOutPoint(utxo.TxID, utxo.Vout)
-	txIn := wire.NewTxIn(outPoint, nil, nil)
-	// Enable replace-by-fee
-	// See https://river.com/learn/terms/r/replace-by-fee-rbf
-	txIn.Sequence = math.MaxUint32 - 2
-	tx.AddTxIn(txIn)
+	for _, utxo := range utxos {
+		outPoint := wire.NewOutPoint(utxo.TxID, utxo.Vout)
+		txIn := wire.NewTxIn(outPoint, nil, nil)
+		// Enable replace-by-fee
+		// See https://river.com/learn/terms/r/replace-by-fee-rbf
+		txIn.Sequence = math.MaxUint32 - 2
+		tx.AddTxIn(txIn)
+	}
 
 	// build txout for data
 	builder := txscript.NewScriptBuilder()
-	tx.AddTxOut(wire.NewTxOut(value, pkScript))
+	tx.AddTxOut(wire.NewTxOut(int64(amount), pkScript))
 	dataScript, err := builder.AddOp(txscript.OP_RETURN).AddData(data).Script()
 	if err != nil {
 		return nil, err
@@ -193,28 +193,25 @@ func (rl *Sender) buildTxWithData(
 	if err != nil {
 		return nil, err
 	}
-	txSize, err := calculateTxVirtualSize(copiedTx, utxo, changeScript)
+	// TODO:
+	txSize, err := calculateTxVirtualSize(copiedTx, utxos[0], changeScript)
 	if err != nil {
 		return nil, err
 	}
-	minRelayFee := rl.calcMinRelayFee(txSize)
-	if utxo.Amount < minRelayFee {
-		return nil, fmt.Errorf("the value of the utxo is not sufficient for relaying the tx. Require: %v. Have: %v", minRelayFee, utxo.Amount)
+	var uxtoAmount btcutil.Amount
+	for _, utxo := range utxos {
+		uxtoAmount += utxo.Amount
 	}
 	txFee := rl.getFeeRate().FeeForVSize(txSize)
-	// ensuring the tx fee is not lower than the minimum relay fee
-	if txFee < minRelayFee {
-		txFee = minRelayFee
-	}
 	// ensuring the tx fee is not higher than the utxo value
-	if utxo.Amount < txFee {
-		return nil, fmt.Errorf("the value of the utxo is not sufficient for paying the calculated fee of the tx. Calculated: %v. Have: %v", txFee, utxo.Amount)
+	if uxtoAmount < txFee {
+		return nil, fmt.Errorf("the value of the utxo is not sufficient for paying the calculated fee of the tx. Calculated: %v. Have: %v", txFee, uxtoAmount)
 	}
-	change := utxo.Amount - txFee
+	change := uxtoAmount - txFee
 	tx.AddTxOut(wire.NewTxOut(int64(change), changeScript))
 
-	// sign tx
-	tx, err = rl.dumpPrivKeyAndSignTx(tx, utxo)
+	// TODO: sign tx
+	tx, err = rl.dumpPrivKeyAndSignTx(tx, utxos[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign tx: %w", err)
 	}
@@ -228,11 +225,11 @@ func (rl *Sender) buildTxWithData(
 
 	rl.logger.Debugf("Successfully composed a BTC tx with balance of input: %v, "+
 		"tx fee: %v, output value: %v, tx size: %v, hex: %v",
-		utxo.Amount, txFee, change, txSize, hex.EncodeToString(signedTxBytes.Bytes()))
+		uxtoAmount, txFee, change, txSize, hex.EncodeToString(signedTxBytes.Bytes()))
 
 	return &types.BtcTxInfo{
 		Tx:            tx,
-		Utxo:          utxo,
+		Utxo:          utxos,
 		ChangeAddress: changeAddr,
 		Size:          txSize,
 		Fee:           txFee,

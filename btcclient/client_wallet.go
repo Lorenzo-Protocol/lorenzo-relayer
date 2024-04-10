@@ -2,6 +2,7 @@ package btcclient
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -131,6 +132,35 @@ func (c *Client) GetHighUTXOAndSum() (*btcjson.ListUnspentResult, float64, error
 		sum += utxo.Amount
 	}
 	return &highUTXO, sum, nil
+}
+
+func (c *Client) GetUTXO(amount btcutil.Amount) ([]btcjson.ListUnspentResult, error) {
+	utxos, err := c.ListUnspent()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list unspent UTXOs: %w", err)
+	}
+	if len(utxos) == 0 {
+		return nil, fmt.Errorf("lack of spendable transactions in the wallet")
+	}
+
+	sort.SliceStable(utxos, func(i, j int) bool {
+		return utxos[i].Amount < utxos[i].Amount
+	})
+	amount_btc := amount.ToBTC()
+	sum := float64(0)
+	var result []btcjson.ListUnspentResult
+	for _, utxo := range utxos {
+		sum += utxo.Amount
+		result = append(result, utxo)
+		if sum >= amount_btc {
+			return result, nil
+		}
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("insufficient funds in the wallet")
+	} else {
+		return result, nil
+	}
 }
 
 // CalculateTxFee calculates tx fee based on the given fee rate (BTC/kB) and the tx size

@@ -11,7 +11,7 @@ type BtcTxInfo struct {
 	TxId          *chainhash.Hash
 	Tx            *wire.MsgTx
 	ChangeAddress btcutil.Address
-	Utxo          *UTXO          // the UTXO used to build this BTC tx
+	Utxo          []*UTXO        // the UTXO used to build this BTC tx
 	Size          int64          // the size of the BTC tx
 	Fee           btcutil.Amount // tx fee cost by the BTC tx
 }
