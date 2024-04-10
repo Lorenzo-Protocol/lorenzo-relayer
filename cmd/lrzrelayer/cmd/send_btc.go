@@ -4,31 +4,41 @@ import (
 	"fmt"
 	"strconv"
 
-	client_config "github.com/Lorenzo-Protocol/lorenzo-sdk/config"
-	lrzqc "github.com/Lorenzo-Protocol/lorenzo-sdk/query"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient/sender"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/netparams"
+	client_config "github.com/Lorenzo-Protocol/lorenzo-sdk/config"
+	lrzqc "github.com/Lorenzo-Protocol/lorenzo-sdk/query"
 )
 
 // returns the CLI commands for the send btc
 func SendBTCCmd() *cobra.Command {
-	var targetAddress string
-	var amount string
 	var cfgFile = ""
 
 	cmd := &cobra.Command{
-		Use:   "send-btc <amount>",
+		Use:   "send-btc <target-address> <amount>",
 		Short: "send BTC to Lorenzo vault",
-		Run: func(_ *cobra.Command, _ []string) {
+		Args:  cobra.ExactArgs(2),
+		Run: func(_ *cobra.Command, args []string) {
 			var (
 				err           error
 				cfg           config.Config
 				lorenzoClient *lrzqc.QueryClient
 			)
+
+			amount, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse amount: %w", err))
+			}
+			if !common.IsHexAddress(args[0]) {
+				panic(fmt.Errorf("invalid target address: %s", args[0]))
+			}
+			targetAddress := common.HexToAddress(args[0])
 
 			// get the config from the given file or the default file
 			cfg, err = config.New(cfgFile)
@@ -58,8 +68,12 @@ func SendBTCCmd() *cobra.Command {
 			if err != nil {
 				panic(fmt.Errorf("failed to get btcstaking params: %w", err))
 			}
-			// TODO: btc chain cfg
-			vaultAddress, err := btcutil.DecodeAddress(btcStakingParams.Params.BtcReceivingAddr, nil)
+
+			btcParams, err := netparams.GetBTCParams(cfg.BTC.NetParams)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse btc params: %w", err))
+			}
+			vaultAddress, err := btcutil.DecodeAddress(btcStakingParams.Params.BtcReceivingAddr, btcParams)
 			if err != nil {
 				panic(fmt.Errorf("failed to parse vault address: %w", err))
 			}
@@ -74,6 +88,7 @@ func SendBTCCmd() *cobra.Command {
 			if err != nil {
 				panic(fmt.Errorf("failed to create fee estimator: %w", err))
 			}
+			panic(fmt.Errorf("vaultAddress: %w, target: %w, amount: %w ", vaultAddress, targetAddress, amount))
 
 			sender := sender.New(
 				btcWallet,
@@ -81,19 +96,13 @@ func SendBTCCmd() *cobra.Command {
 				est,
 				rootLogger,
 			)
-			amount_int, err := strconv.ParseInt(amount, 10, 64)
-			if err != nil {
-				panic(fmt.Errorf("failed to parse amount: %w", err))
-			}
-			tx, err := sender.SendBTCtoLorenzoVault([]byte(targetAddress), btcutil.Amount(amount_int))
+			tx, err := sender.SendBTCtoLorenzoVault(targetAddress.Bytes(), btcutil.Amount(amount))
 			if err != nil {
 				panic(fmt.Errorf("failed to send btc: %w", err))
 			}
 			fmt.Println("success, txid: %w", tx.TxId)
 		},
 	}
-	cmd.Flags().StringVar(&targetAddress, "target-address", "", "target address on lorenzo chain.")
-	cmd.Flags().StringVar(&amount, "amount", "", "amount, an integer number, unit is sats.")
 	cmd.Flags().StringVar(&cfgFile, "config", config.DefaultConfigFile(), "config file")
 	return cmd
 }

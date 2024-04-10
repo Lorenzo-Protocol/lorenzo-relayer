@@ -10,7 +10,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "Lorenzo relayer",
 	}
 	rootCmd.AddCommand(
-		GetReporterCmd(),
+		// GetReporterCmd(),
 		SendBTCCmd(),
 	)
 
