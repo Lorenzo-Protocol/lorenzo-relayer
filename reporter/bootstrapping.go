@@ -251,7 +251,7 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 	if lorenzoTip.Header.Height+closeGap < btcTip {
 		overCh := make(chan struct{})
 		errorCh := make(chan error)
-		ibCh := make(chan []*types.IndexedBlock, 1)
+		ibCh := make(chan []*types.IndexedBlock, 10)
 		batchSize := uint64(FetchBTCBlocksBatchSize)
 		go func() {
 			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
