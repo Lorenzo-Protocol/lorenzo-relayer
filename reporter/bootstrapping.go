@@ -12,6 +12,10 @@ import (
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
+const (
+	FetchBTCBlocksBatchSize = 100
+)
+
 var (
 	bootstrapAttempts      = uint(60)
 	bootstrapAttemptsAtt   = retry.Attempts(bootstrapAttempts)
@@ -243,22 +247,29 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 		return nil
 	}
 	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
-	defer func(start time.Time) {
-		r.logger.Infof("waitLorenzoCatchUpCloseToBTCTip time used: %v", time.Since(start))
-	}(time.Now())
 
 	if lorenzoTip.Header.Height+closeGap < btcTip {
 		overCh := make(chan struct{})
 		errorCh := make(chan error)
-		ibCh := make(chan *types.IndexedBlock, 10)
+		ibCh := make(chan []*types.IndexedBlock, 10)
+		batchSize := uint64(FetchBTCBlocksBatchSize)
 		go func() {
 			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
-				ib, _, err := r.btcClient.GetBlockByHeight(h)
+				endHeight := h + batchSize - 1
+				if endHeight > btcTip-closeGap {
+					endHeight = btcTip - closeGap - 1
+				}
+
+				startFetch := time.Now()
+				ibs, err := r.btcClient.FindRangeBlocksByHeight(h, endHeight)
+				r.logger.Infof("fetch block from %d to %d, time used: %v", h, endHeight, time.Since(startFetch))
 				if err != nil {
 					errorCh <- err
 					return
 				}
-				ibCh <- ib
+
+				ibCh <- ibs
+				h = endHeight
 			}
 
 			// fetch block over
@@ -269,17 +280,17 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 		signer := r.lorenzoClient.MustGetAddr()
 		for {
 			select {
-			case ib := <-ibCh:
-				if ib.Header.PrevBlock.IsEqual(lorenzoNewTipHeader) == false {
+			case ibs := <-ibCh:
+				if ibs[0].Header.PrevBlock.IsEqual(lorenzoNewTipHeader) == false {
 					r.logger.Panicf("height(%d) PrevBlock(%s) is not lorenzo tip(%s)",
-						ib.Height, ib.Header.PrevBlock.String(), lorenzoNewTipHeader.String())
+						ibs[0].Height, ibs[0].Header.PrevBlock.String(), lorenzoNewTipHeader.String())
 				}
 
-				_, err = r.ProcessHeaders(signer, []*types.IndexedBlock{ib})
+				_, err = r.ProcessHeaders(signer, ibs)
 				if err != nil {
 					panic(err)
 				}
-				currentHash := ib.Header.BlockHash()
+				currentHash := ibs[len(ibs)-1].Header.BlockHash()
 				lorenzoNewTipHeader = &currentHash
 			case err := <-errorCh:
 				return err
