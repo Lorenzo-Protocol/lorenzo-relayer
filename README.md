@@ -5,7 +5,6 @@ Lorenzo-relayer program for Lorenzo. It starts its development based on [Babylon
 ## Requirements
 
 - Go 1.21
-- Package [libzmq](https://github.com/zeromq/libzmq)
 
 ## Building
 

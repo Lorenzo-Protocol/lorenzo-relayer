@@ -3,8 +3,9 @@ package btcclient
 import (
 	"time"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/lightningnetwork/lnd/chainntnfs"
+
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 )
 
 type Btcd struct {

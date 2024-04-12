@@ -15,8 +15,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/zmq"
 )
 
 var _ BTCClient = &Client{}
@@ -25,7 +23,6 @@ var _ BTCClient = &Client{}
 // for information regarding the current best block chain.
 type Client struct {
 	*rpcclient.Client
-	zmqClient *zmq.Client
 
 	Params *chaincfg.Params
 	Cfg    *config.BTCConfig
@@ -34,9 +31,6 @@ type Client struct {
 	// retry attributes
 	retrySleepTime    time.Duration
 	maxRetrySleepTime time.Duration
-
-	// channel for notifying new BTC blocks to reporter
-	blockEventChan chan *types.BlockEvent
 }
 
 func (c *Client) GetTipBlockVerbose() (*btcjson.GetBlockVerboseResult, error) {
@@ -54,10 +48,4 @@ func (c *Client) GetTipBlockVerbose() (*btcjson.GetBlockVerboseResult, error) {
 
 func (c *Client) Stop() {
 	c.Shutdown()
-	// NewWallet will create a client with nil blockEventChan,
-	// while NewWithBlockSubscriber will have a non-nil one, so
-	// we need to check here
-	if c.blockEventChan != nil {
-		close(c.blockEventChan)
-	}
 }

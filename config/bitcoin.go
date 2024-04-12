@@ -17,7 +17,6 @@ type BTCConfig struct {
 	Password          string                    `mapstructure:"password"`
 	ReconnectAttempts int                       `mapstructure:"reconnect-attempts"`
 	BtcBackend        types.SupportedBtcBackend `mapstructure:"btc-backend"`
-	ZmqSeqEndpoint    string                    `mapstructure:"zmq-seq-endpoint"`
 }
 
 func (cfg *BTCConfig) Validate() error {
@@ -33,36 +32,7 @@ func (cfg *BTCConfig) Validate() error {
 		return errors.New("invalid btc backend")
 	}
 
-	if cfg.BtcBackend == types.Bitcoind {
-		// TODO: implement regex validation for zmq endpoint
-		if cfg.ZmqSeqEndpoint == "" {
-			return errors.New("zmq seq endpoint cannot be empty")
-		}
-	}
-
 	return nil
-}
-
-const (
-	// Config for polling jittner in bitcoind client, with polling enabled
-	DefaultRpcBtcNodeHost = "127.0.01:18556"
-	DefaultBtcNodeRpcUser = "rpcuser"
-	DefaultBtcNodeRpcPass = "rpcpass"
-	DefaultZmqSeqEndpoint = "tcp://127.0.0.1:29000"
-)
-
-func DefaultBTCConfig() BTCConfig {
-	return BTCConfig{
-		DisableClientTLS:  false,
-		CAFile:            defaultBtcCAFile,
-		Endpoint:          DefaultRpcBtcNodeHost,
-		BtcBackend:        types.Btcd,
-		NetParams:         types.BtcSimnet.String(),
-		Username:          DefaultBtcNodeRpcUser,
-		Password:          DefaultBtcNodeRpcPass,
-		ReconnectAttempts: 3,
-		ZmqSeqEndpoint:    DefaultZmqSeqEndpoint,
-	}
 }
 
 func (cfg *BTCConfig) ReadCAFile() []byte {

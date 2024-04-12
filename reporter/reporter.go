@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	DefaultBtcConfirmationDepth          = 10
-	DefaultCheckpointFinalizationTimeout = 100
-	DefaultDelayBlocks                   = 3
+	DefaultBtcConfirmationDepth = 10
+	DefaultDelayBlocks          = 3
 )
 
 type Reporter struct {
@@ -29,18 +28,15 @@ type Reporter struct {
 	retrySleepTime    time.Duration
 	maxRetrySleepTime time.Duration
 
-	// Internal states of the reporter
-	btcCache                      *types.BTCCache
-	reorgList                     *reorgList
-	btcConfirmationDepth          uint64
-	checkpointFinalizationTimeout uint64
-	metrics                       *metrics.ReporterMetrics
-	wg                            sync.WaitGroup
-	started                       bool
-	quit                          chan struct{}
-	quitMu                        sync.Mutex
+	btcConfirmationDepth uint64
+	metrics              *metrics.ReporterMetrics
+	wg                   sync.WaitGroup
+	started              bool
+	quit                 chan struct{}
+	quitMu               sync.Mutex
 
-	delayBlocks uint64
+	delayBlocks   uint64
+	lorenzoBtcTip *types.IndexedBlock
 }
 
 func New(
@@ -55,18 +51,15 @@ func New(
 	logger := parentLogger.With(zap.String("module", "reporter")).Sugar()
 
 	return &Reporter{
-		Cfg:               cfg,
-		logger:            logger,
-		retrySleepTime:    retrySleepTime,
-		maxRetrySleepTime: maxRetrySleepTime,
-		btcClient:         btcClient,
-		lorenzoClient:     lorenzoClient,
-		reorgList:         newReorgList(),
-		//TODO: get from config file
-		btcConfirmationDepth:          DefaultBtcConfirmationDepth,
-		checkpointFinalizationTimeout: DefaultCheckpointFinalizationTimeout,
-		metrics:                       metrics,
-		quit:                          make(chan struct{}),
+		Cfg:                  cfg,
+		logger:               logger,
+		retrySleepTime:       retrySleepTime,
+		maxRetrySleepTime:    maxRetrySleepTime,
+		btcClient:            btcClient,
+		lorenzoClient:        lorenzoClient,
+		btcConfirmationDepth: DefaultBtcConfirmationDepth,
+		metrics:              metrics,
+		quit:                 make(chan struct{}),
 
 		// delayBlocks must be less than tip-lorenzoBaseHeight & btcConfirmationDepth
 		delayBlocks: DefaultDelayBlocks,
@@ -91,14 +84,9 @@ func (r *Reporter) Start() {
 	}
 	r.quitMu.Unlock()
 
-	if err := r.waitLorenzoCatchUpCloseToBTCTip(); err != nil {
-		panic(err)
-	}
-
-	r.bootstrapWithRetries(false)
-
+	r.bootstrapWithRetries()
 	r.wg.Add(1)
-	go r.blockEventHandler()
+	go r.mainLoop()
 
 	// start record time-related metrics
 	r.metrics.RecordMetrics()

@@ -24,117 +24,69 @@ var (
 	bootstrapErrReportType = retry.LastErrorOnly(true)
 )
 
-type consistencyCheckInfo struct {
-	lorenzoLatestBlockHeight uint64
-	startSyncHeight          uint64
+func (r *Reporter) bootstrap() error {
+	if err := r.waitUntilBTCSync(); err != nil {
+		return err
+	}
+	commonHeight, commonHash, err := r.findCommonBlock()
+	if err != nil {
+		return err
+	}
+	if r.waitLorenzoCatchUp(commonHeight, commonHash) != nil {
+		return err
+	}
+
+	lorenzoTipResp, err := r.lorenzoClient.BTCHeaderChainTip()
+	if err != nil {
+		return err
+	}
+	lorenzoTipHash := lorenzoTipResp.Header.Hash.ToChainhash()
+	r.lorenzoBtcTip, _, err = r.btcClient.GetBlockByHash(lorenzoTipHash)
+	if err != nil {
+		return err
+	}
+	if r.lorenzoBtcTip == nil {
+		err := fmt.Errorf("lorenzo tip block is not in btc chain. hash:%s", lorenzoTipHash.String())
+		panic(err)
+	}
+
+	return nil
 }
 
-// checkConsistency checks whether the `max(lorenzo_tip_height - confirmation_depth, lorenzo_base_height)` block is same
-// between Lorenzo header chain and BTC main chain.` This makes sure that already confirmed chain is the same from point
-// of view of both chains.
-func (r *Reporter) checkConsistency() (*consistencyCheckInfo, error) {
-
+func (r *Reporter) findCommonBlock() (uint64, *chainhash.Hash, error) {
 	tipRes, err := r.lorenzoClient.BTCHeaderChainTip()
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	// Find the base height of Lorenzo header chain
 	baseRes, err := r.lorenzoClient.BTCBaseHeader()
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	var consistencyCheckHeight uint64
+	var commonHeight uint64
 	if tipRes.Header.Height >= baseRes.Header.Height+r.btcConfirmationDepth {
-		consistencyCheckHeight = tipRes.Header.Height - r.btcConfirmationDepth
+		commonHeight = tipRes.Header.Height - r.btcConfirmationDepth
 	} else {
-		consistencyCheckHeight = baseRes.Header.Height
+		commonHeight = baseRes.Header.Height
 	}
 
-	// this checks whether header at already confirmed height is the same in reporter btc cache and in lorenzo btc light client
-	if err := r.checkHeaderConsistency(consistencyCheckHeight); err != nil {
-		return nil, err
-	}
-
-	return &consistencyCheckInfo{
-		lorenzoLatestBlockHeight: tipRes.Header.Height,
-		// we are staring from the block after already confirmed block
-		startSyncHeight: consistencyCheckHeight + 1,
-	}, nil
-}
-
-func (r *Reporter) bootstrap(skipBlockSubscription bool) error {
-	defer func(start time.Time) {
-		r.logger.Debugf("bootstrap time used %v", time.Since(start))
-	}(time.Now())
-
-	var (
-		btcLatestBlockHeight uint64
-		ibs                  []*types.IndexedBlock
-		err                  error
-	)
-
-	// if we are bootstraping, we will definitely not handle reorgs
-	r.reorgList.clear()
-
-	// ensure BTC has caught up with Lorenzo header chain
-	if err := r.waitUntilBTCSync(); err != nil {
-		return err
-	}
-
-	// initialize cache with the latest blocks
-	if err := r.initBTCCache(); err != nil {
-		return err
-	}
-	r.logger.Debugf("BTC cache size: %d", r.btcCache.Size())
-
-	// Subscribe new blocks right after initialising BTC cache, in order to ensure subscribed blocks and cached blocks do not have overlap.
-	// Otherwise, if we subscribe too early, then they will have overlap, leading to duplicated header/ckpt submissions.
-	if !skipBlockSubscription {
-		r.btcClient.MustSubscribeBlocks()
-	}
-
-	consistencyInfo, err := r.checkConsistency()
-
+	ib, _, err := r.btcClient.GetBlockByHeight(commonHeight)
 	if err != nil {
-		return err
+		return 0, nil, err
 	}
-
-	ibs, err = r.btcCache.GetLastBlocks(consistencyInfo.startSyncHeight)
+	btcBlockHash := ib.Header.BlockHash()
+	lorenzoContainsBtcBlockResp, err := r.lorenzoClient.ContainsBTCBlock(&btcBlockHash)
 	if err != nil {
+		return 0, nil, err
+	}
+	if !lorenzoContainsBtcBlockResp.Contains {
+		err = fmt.Errorf("BTC chain btcConfirmationsDepth block is not in lorenzo header chain. hash:%s, height: %d", btcBlockHash.String(), commonHeight)
 		panic(err)
 	}
 
-	signer := r.lorenzoClient.MustGetAddr()
-
-	r.logger.Infof("BTC height: %d. BTCLightclient height: %d. Start syncing from height %d.", btcLatestBlockHeight, consistencyInfo.lorenzoLatestBlockHeight, consistencyInfo.startSyncHeight)
-
-	// extracts and submits headers for each block in ibs
-	// Note: As we are retrieving blocks from btc cache from block just after confirmed block which
-	// we already checked for consistency, we can be sure that even if rest of the block headers is different from in Lorenzo
-	// due to reorg, our fork will be better than the one in Lorenzo.
-	ibs = ibs[:len(ibs)-int(r.delayBlocks)] //only process the last delayBlocks
-	_, err = r.ProcessHeaders(signer, ibs)
-	if err != nil {
-		// this can happen when there are two contentious lrzrelayer or if our btc node is behind.
-		r.logger.Errorf("Failed to submit headers: %v", err)
-		// returning error as it is up to the caller to decide what do next
-		return err
-	}
-
-	// trim cache to the latest k+w blocks on BTC (which are same as in Lorenzo)
-	maxEntries := r.btcConfirmationDepth + r.checkpointFinalizationTimeout
-	if err = r.btcCache.Resize(maxEntries); err != nil {
-		r.logger.Errorf("Failed to resize BTC cache: %v", err)
-		panic(err)
-	}
-	r.btcCache.Trim()
-
-	r.logger.Infof("Size of the BTC cache: %d", r.btcCache.Size())
-
-	r.logger.Info("Successfully finished bootstrapping")
-	return nil
+	return commonHeight, &btcBlockHash, nil
 }
 
 func (r *Reporter) reporterQuitCtx() (context.Context, func()) {
@@ -155,12 +107,12 @@ func (r *Reporter) reporterQuitCtx() (context.Context, func()) {
 	return ctx, cancel
 }
 
-func (r *Reporter) bootstrapWithRetries(skipBlockSubscription bool) {
+func (r *Reporter) bootstrapWithRetries() {
 	// if we are exiting, we need to cancel this process
 	ctx, cancel := r.reporterQuitCtx()
 	defer cancel()
 	if err := retry.Do(func() error {
-		return r.bootstrap(skipBlockSubscription)
+		return r.bootstrap()
 	},
 		retry.Context(ctx),
 		bootstrapAttemptsAtt,
@@ -180,123 +132,64 @@ func (r *Reporter) bootstrapWithRetries(skipBlockSubscription bool) {
 	}
 }
 
-// initBTCCache fetches the blocks since T-k-w in the BTC canonical chain
-// where T is the height of the latest block in Lorenzo header chain
-func (r *Reporter) initBTCCache() error {
-	var (
-		err                      error
-		lorenzoLatestBlockHeight uint64
-		lorenzoBaseHeight        uint64
-		baseHeight               uint64
-		ibs                      []*types.IndexedBlock
-	)
-
-	r.btcCache, err = types.NewBTCCache(r.Cfg.BTCCacheSize) // TODO: give an option to be unsized
-	if err != nil {
-		panic(err)
-	}
-
-	// get T, i.e., total block count in Lorenzo header chain
-	tipRes, err := r.lorenzoClient.BTCHeaderChainTip()
-	if err != nil {
-		return err
-	}
-	lorenzoLatestBlockHeight = tipRes.Header.Height
-
-	// Find the base height
-	baseRes, err := r.lorenzoClient.BTCBaseHeader()
-	if err != nil {
-		return err
-	}
-	lorenzoBaseHeight = baseRes.Header.Height
-
-	// Fetch block since `baseHeight = T - k - w` from BTC, where
-	// - T is total block count in Lorenzo header chain
-	// - k is btcConfirmationDepth of Lorenzo
-	// - w is checkpointFinalizationTimeout of Lorenzo
-	if lorenzoLatestBlockHeight > lorenzoBaseHeight+r.btcConfirmationDepth+r.checkpointFinalizationTimeout {
-		baseHeight = lorenzoLatestBlockHeight - r.btcConfirmationDepth - r.checkpointFinalizationTimeout + 1
-	} else {
-		baseHeight = lorenzoBaseHeight
-	}
-
-	ibs, err = r.btcClient.FindTailBlocksByHeight(baseHeight)
-	if err != nil {
-		panic(err)
-	}
-
-	if err = r.btcCache.Init(ibs); err != nil {
-		panic(err)
-	}
-	return nil
-}
-
-func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
-	closeGap := r.btcConfirmationDepth * 2
+func (r *Reporter) waitLorenzoCatchUp(commonHeight uint64, commonHash *chainhash.Hash) error {
 	_, btcTip, err := r.btcClient.GetBestBlock()
 	if err != nil {
 		return err
 	}
-
-	lorenzoTip, err := r.lorenzoClient.BTCHeaderChainTip()
-	if err != nil {
-		return err
-	}
-	if lorenzoTip.Header.Height+closeGap >= btcTip {
-		// don't anything
+	if commonHeight+r.delayBlocks >= btcTip {
 		return nil
 	}
-	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
 
-	if lorenzoTip.Header.Height+closeGap < btcTip {
-		overCh := make(chan struct{})
-		errorCh := make(chan error)
-		ibCh := make(chan []*types.IndexedBlock, 10)
-		batchSize := uint64(FetchBTCBlocksBatchSize)
-		go func() {
-			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
-				endHeight := h + batchSize - 1
-				if endHeight > btcTip-closeGap {
-					endHeight = btcTip - closeGap - 1
-				}
+	overCh := make(chan struct{})
+	errorCh := make(chan error)
+	ibCh := make(chan []*types.IndexedBlock, 10)
+	batchSize := uint64(FetchBTCBlocksBatchSize)
+	r.logger.Infof("lorenzo begin catch up. from (%d) to (%d)", commonHeight, btcTip-r.delayBlocks)
 
-				startFetch := time.Now()
-				ibs, err := r.btcClient.FindRangeBlocksByHeight(h, endHeight)
-				r.logger.Infof("fetch block from %d to %d, time used: %v", h, endHeight, time.Since(startFetch))
-				if err != nil {
-					errorCh <- err
-					return
-				}
-
-				ibCh <- ibs
-				h = endHeight
+	go func() {
+		for h := commonHeight + 1; h < btcTip-r.delayBlocks; h++ {
+			endHeight := h + batchSize - 1
+			if endHeight > btcTip-r.delayBlocks {
+				endHeight = btcTip - r.delayBlocks - 1
 			}
 
-			// fetch block over
-			close(overCh)
-		}()
-
-		lorenzoNewTipHeader := lorenzoTip.Header.Hash.ToChainhash()
-		signer := r.lorenzoClient.MustGetAddr()
-		for {
-			select {
-			case ibs := <-ibCh:
-				if ibs[0].Header.PrevBlock.IsEqual(lorenzoNewTipHeader) == false {
-					r.logger.Panicf("height(%d) PrevBlock(%s) is not lorenzo tip(%s)",
-						ibs[0].Height, ibs[0].Header.PrevBlock.String(), lorenzoNewTipHeader.String())
-				}
-
-				_, err = r.ProcessHeaders(signer, ibs)
-				if err != nil {
-					panic(err)
-				}
-				currentHash := ibs[len(ibs)-1].Header.BlockHash()
-				lorenzoNewTipHeader = &currentHash
-			case err := <-errorCh:
-				return err
-			case <-overCh:
-				return nil
+			startFetch := time.Now()
+			ibs, err := r.btcClient.FindRangeBlocksByHeight(h, endHeight)
+			r.logger.Infof("fetch block from %d to %d, time used: %v", h, endHeight, time.Since(startFetch))
+			if err != nil {
+				errorCh <- err
+				return
 			}
+
+			ibCh <- ibs
+			h = endHeight
+		}
+
+		// fetch block over
+		close(overCh)
+	}()
+
+	preHash := commonHash
+	signer := r.lorenzoClient.MustGetAddr()
+	for {
+		select {
+		case ibs := <-ibCh:
+			if ibs[0].Header.PrevBlock.IsEqual(preHash) == false {
+				r.logger.Panicf("height(%d) PrevBlock(%s) is not lorenzo tip(%s)",
+					ibs[0].Height, ibs[0].Header.PrevBlock.String(), preHash.String())
+			}
+
+			_, err = r.ProcessHeaders(signer, ibs)
+			if err != nil {
+				panic(err)
+			}
+			currentHash := ibs[len(ibs)-1].Header.BlockHash()
+			preHash = &currentHash
+		case err := <-errorCh:
+			return err
+		case <-overCh:
+			return nil
 		}
 	}
 
@@ -357,32 +250,5 @@ func (r *Reporter) waitUntilBTCSync() error {
 		}
 	}
 
-	return nil
-}
-
-func (r *Reporter) checkHeaderConsistency(consistencyCheckHeight uint64) error {
-	var err error
-
-	consistencyCheckBlock := r.btcCache.FindBlock(consistencyCheckHeight)
-	if consistencyCheckBlock == nil {
-		err = fmt.Errorf("cannot find the %d-th block of Lorenzo header chain in BTC cache for initial consistency check", consistencyCheckHeight)
-		panic(err)
-	}
-	consistencyCheckHash := consistencyCheckBlock.BlockHash()
-
-	r.logger.Debugf("block for consistency check: height %d, hash %v", consistencyCheckHeight, consistencyCheckHash)
-
-	// Given that two consecutive BTC headers are chained via hash functions,
-	// generating a header that can be in two different positions in two different BTC header chains
-	// is as hard as breaking the hash function.
-	// So as long as the block exists on Lorenzo, it has to be at the same position as in Lorenzo as well.
-	res, err := r.lorenzoClient.ContainsBTCBlock(&consistencyCheckHash) // TODO: this API has error. Find out why
-	if err != nil {
-		return err
-	}
-	if !res.Contains {
-		err = fmt.Errorf("BTC main chain is inconsistent with Lorenzo header chain: k-deep block in Lorenzo header chain: %v", consistencyCheckHash)
-		panic(err)
-	}
 	return nil
 }

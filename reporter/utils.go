@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
 	btclctypes "github.com/Lorenzo-Protocol/lorenzo/x/btclightclient/types"
 
@@ -119,21 +118,4 @@ func (r *Reporter) ProcessHeaders(signer string, ibs []*types.IndexedBlock) (int
 	}
 
 	return numSubmitted, err
-}
-
-func calculateBranchWork(branch []*types.IndexedBlock) sdkmath.Uint {
-	var currenWork = sdkmath.ZeroUint()
-	for _, h := range branch {
-		headerWork := btclctypes.CalcHeaderWork(h.Header)
-		currenWork = btclctypes.CumulativeWork(headerWork, currenWork)
-	}
-	return currenWork
-}
-
-// push msg to channel c, or quit if quit channel is closed
-func PushOrQuit[T any](c chan<- T, msg T, quit <-chan struct{}) {
-	select {
-	case c <- msg:
-	case <-quit:
-	}
 }

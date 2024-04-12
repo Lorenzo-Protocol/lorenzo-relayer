@@ -46,7 +46,7 @@ func GetReporterCmd() *cobra.Command {
 
 			// create BTC client and connect to BTC server
 			// Note that vigilant reporter needs to subscribe to new BTC blocks
-			btcClient, err = btcclient.NewWithBlockSubscriber(&cfg.BTC, cfg.Common.RetrySleepTime, cfg.Common.MaxRetrySleepTime, rootLogger)
+			btcClient, err = btcclient.NewQueryClient(&cfg.BTC, cfg.Common.RetrySleepTime, cfg.Common.MaxRetrySleepTime, rootLogger)
 			if err != nil {
 				panic(fmt.Errorf("failed to open BTC client: %w", err))
 			}
