@@ -30,7 +30,8 @@ func (r *Reporter) blockEventHandler() {
 				if h >= r.delayBlocks+uint64(event.Height) {
 					break
 				}
-				r.logger.Debugf("Delaying block processing for %d blocks", r.delayBlocks)
+				r.logger.Debugf("Delaying block processing for %d blocks. blockHeight: %d, btcTip: %d",
+					r.delayBlocks, event.Height, h)
 				time.Sleep(BlockEventCheckInterval)
 			}
 
