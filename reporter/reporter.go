@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -54,7 +55,7 @@ func New(
 ) (*Reporter, error) {
 	logger := parentLogger.With(zap.String("module", "reporter")).Sugar()
 
-	return &Reporter{
+	r := &Reporter{
 		Cfg:               cfg,
 		logger:            logger,
 		retrySleepTime:    retrySleepTime,
@@ -68,9 +69,14 @@ func New(
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
 
-		// delayBlocks must be less than tip-lorenzoBaseHeight & btcConfirmationDepth
-		delayBlocks: DefaultDelayBlocks,
-	}, nil
+		// delayBlocks must be less than  btcConfirmationDepth
+		delayBlocks: cfg.DelayBlocks,
+	}
+	if r.delayBlocks >= r.btcConfirmationDepth {
+		return nil, errors.New("delayBlocks must be less than btcConfirmationDepth")
+	}
+
+	return r, nil
 }
 
 // Start starts the goroutines necessary to manage a lrzrelayer.

@@ -61,7 +61,7 @@ func (r *Reporter) blockEventHandler() {
 
 // handleConnectedBlocks handles connected blocks from the BTC client.
 func (r *Reporter) handleConnectedBlocks(event *types.BlockEvent) error {
-	// After delay three blocks, hope the connected block is on the best chain, otherwise restart bootstrap.
+	// After delay blocks, hope the connected block is on the best chain, otherwise restart bootstrap.
 	// It is just to reduce branching on Lorenzo side.
 	{
 		ib, _, err := r.btcClient.GetBlockByHeight(uint64(event.Height))

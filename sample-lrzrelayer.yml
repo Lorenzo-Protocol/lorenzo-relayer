@@ -34,3 +34,4 @@ reporter:
   netparams: testnet
   btc_cache_size: 1000
   max_headers_in_msg: 100
+  delay_blocks: 3

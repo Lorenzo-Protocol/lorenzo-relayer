@@ -16,6 +16,7 @@ type ReporterConfig struct {
 	NetParams       string `mapstructure:"netparams"`          // should be mainnet|testnet|simnet|signet
 	BTCCacheSize    uint64 `mapstructure:"btc_cache_size"`     // size of the BTC cache
 	MaxHeadersInMsg uint32 `mapstructure:"max_headers_in_msg"` // maximum number of headers in a MsgInsertHeaders message
+	DelayBlocks     uint64 `mapstructure:"delay_blocks"`       // number of blocks to wait before inserting headers
 }
 
 func (cfg *ReporterConfig) Validate() error {
@@ -29,12 +30,4 @@ func (cfg *ReporterConfig) Validate() error {
 		return fmt.Errorf("max_headers_in_msg has to be at least %d", maxHeadersInMsg)
 	}
 	return nil
-}
-
-func DefaultReporterConfig() ReporterConfig {
-	return ReporterConfig{
-		NetParams:       types.BtcSimnet.String(),
-		BTCCacheSize:    minBTCCacheSize,
-		MaxHeadersInMsg: maxHeadersInMsg,
-	}
 }
