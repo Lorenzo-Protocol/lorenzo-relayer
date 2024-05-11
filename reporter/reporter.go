@@ -1,7 +1,6 @@
 package reporter
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -69,11 +68,7 @@ func New(
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
 
-		// delayBlocks must be less than  btcConfirmationDepth
 		delayBlocks: cfg.DelayBlocks,
-	}
-	if r.delayBlocks >= r.btcConfirmationDepth {
-		return nil, errors.New("delayBlocks must be less than btcConfirmationDepth")
 	}
 
 	return r, nil
