@@ -54,7 +54,7 @@ func New(
 ) (*Reporter, error) {
 	logger := parentLogger.With(zap.String("module", "reporter")).Sugar()
 
-	return &Reporter{
+	r := &Reporter{
 		Cfg:               cfg,
 		logger:            logger,
 		retrySleepTime:    retrySleepTime,
@@ -68,9 +68,10 @@ func New(
 		metrics:                       metrics,
 		quit:                          make(chan struct{}),
 
-		// delayBlocks must be less than tip-lorenzoBaseHeight & btcConfirmationDepth
-		delayBlocks: DefaultDelayBlocks,
-	}, nil
+		delayBlocks: cfg.DelayBlocks,
+	}
+
+	return r, nil
 }
 
 // Start starts the goroutines necessary to manage a lrzrelayer.
@@ -103,7 +104,7 @@ func (r *Reporter) Start() {
 	// start record time-related metrics
 	r.metrics.RecordMetrics()
 
-	r.logger.Infof("Successfully started the vigilant reporter")
+	r.logger.Infof("Successfully started the lrzrelayer reporter")
 }
 
 // quitChan atomically reads the quit channel.
