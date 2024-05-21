@@ -76,6 +76,9 @@ func New(
 
 // Start starts the goroutines necessary to manage a lrzrelayer.
 func (r *Reporter) Start() {
+	r.logger.Infof("Starting reporter. reporter address: %s, delay blocks: %d",
+		r.lorenzoClient.MustGetAddr(), r.delayBlocks)
+
 	r.quitMu.Lock()
 	select {
 	case <-r.quit:
