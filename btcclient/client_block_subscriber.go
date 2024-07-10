@@ -6,15 +6,14 @@ import (
 
 	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/wire"
 	"go.uber.org/zap"
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/netparams"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/zmq"
-
-	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcd/wire"
 )
 
 // NewWithBlockSubscriber creates a new BTC client that subscribes to newly connected/disconnected blocks
@@ -56,7 +55,9 @@ func NewWithBlockSubscriber(cfg *config.BTCConfig, retrySleepTime, maxRetrySleep
 		if err != nil {
 			return nil, fmt.Errorf("failed to get BTC backend: %v", err)
 		}
-		if backend != rpcclient.BitcoindPost19 {
+		switch backend.(type) {
+		case *rpcclient.BitcoindVersion, rpcclient.BitcoindVersion:
+		default:
 			return nil, fmt.Errorf("zmq is only supported by bitcoind, but got %v", backend)
 		}
 
@@ -79,6 +80,10 @@ func NewWithBlockSubscriber(cfg *config.BTCConfig, retrySleepTime, maxRetrySleep
 			},
 		}
 
+		certificates, err := cfg.ReadCAFile()
+		if err != nil {
+			return nil, err
+		}
 		// TODO Currently we are not using Params field of rpcclient.ConnConfig due to bug in btcd
 		// when handling signet.
 		connCfg := &rpcclient.ConnConfig{
@@ -87,7 +92,7 @@ func NewWithBlockSubscriber(cfg *config.BTCConfig, retrySleepTime, maxRetrySleep
 			User:         cfg.Username,
 			Pass:         cfg.Password,
 			DisableTLS:   cfg.DisableClientTLS,
-			Certificates: cfg.ReadCAFile(),
+			Certificates: certificates,
 		}
 
 		rpcClient, err := rpcclient.New(connCfg, &notificationHandlers)
@@ -100,7 +105,9 @@ func NewWithBlockSubscriber(cfg *config.BTCConfig, retrySleepTime, maxRetrySleep
 		if err != nil {
 			return nil, fmt.Errorf("failed to get BTC backend: %v", err)
 		}
-		if backend != rpcclient.Btcd {
+		switch backend.(type) {
+		case *rpcclient.BtcdVersion, rpcclient.BtcdVersion:
+		default:
 			return nil, fmt.Errorf("websocket is only supported by btcd, but got %v", backend)
 		}
 

@@ -85,6 +85,7 @@ func GetReporterCmd() *cobra.Command {
 			addInterruptHandler(func() {
 				rootLogger.Info("Stopping reporter...")
 				vigilantReporter.Stop()
+				vigilantReporter.WaitForShutdown()
 				rootLogger.Info("Reporter shutdown")
 			})
 			addInterruptHandler(func() {
