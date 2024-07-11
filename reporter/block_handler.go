@@ -22,7 +22,7 @@ func (r *Reporter) blockEventHandler() {
 			//delay block processing until the block is mature
 			for {
 				select {
-				case <-r.quit:
+				case <-quit:
 					return
 				default:
 				}
