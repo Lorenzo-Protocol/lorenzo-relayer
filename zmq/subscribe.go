@@ -2,6 +2,7 @@ package zmq
 
 import (
 	"encoding/hex"
+	"errors"
 	"sync"
 	"time"
 
@@ -49,6 +50,9 @@ func (c *Client) SubscribeSequence() (err error) {
 		return
 	}
 
+	if c.subs.zfront == nil {
+		return errors.New("zfront is not initialized")
+	}
 	_, err = c.subs.zfront.SendMessage("subscribe", "sequence")
 	if err != nil {
 		c.subs.Unlock()

@@ -65,18 +65,19 @@ func DefaultBTCConfig() BTCConfig {
 	}
 }
 
-func (cfg *BTCConfig) ReadCAFile() []byte {
+func (cfg *BTCConfig) ReadCAFile() ([]byte, error) {
 	if cfg.DisableClientTLS {
-		return nil
+		return nil, nil
 	}
 
 	// Read certificate file if TLS is not disabled.
 	certs, err := os.ReadFile(cfg.CAFile)
 	if err != nil {
-		// If there's an error reading the CA file, continue
-		// with nil certs and without the client connection.
-		return nil
+		return nil, err
+	}
+	if certs == nil {
+		return nil, errors.New("empty certificate file")
 	}
 
-	return certs
+	return certs, nil
 }

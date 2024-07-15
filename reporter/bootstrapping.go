@@ -248,6 +248,7 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 	}
 	r.logger.Infof("lorenzo begin catch up to close btc tip. from (%d) to (%d)", lorenzoTip.Header.Height, btcTip-closeGap)
 
+	quit := r.quitChan()
 	if lorenzoTip.Header.Height+closeGap < btcTip {
 		overCh := make(chan struct{})
 		errorCh := make(chan error)
@@ -255,6 +256,13 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 		batchSize := uint64(FetchBTCBlocksBatchSize)
 		go func() {
 			for h := lorenzoTip.Header.Height + 1; h < btcTip-closeGap; h++ {
+				select {
+				case <-quit:
+					close(overCh)
+					return
+				default:
+				}
+
 				endHeight := h + batchSize - 1
 				if endHeight > btcTip-closeGap {
 					endHeight = btcTip - closeGap - 1
@@ -295,6 +303,8 @@ func (r *Reporter) waitLorenzoCatchUpCloseToBTCTip() error {
 			case err := <-errorCh:
 				return err
 			case <-overCh:
+				return nil
+			case <-quit:
 				return nil
 			}
 		}

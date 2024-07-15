@@ -21,6 +21,12 @@ func (r *Reporter) blockEventHandler() {
 		case event, open := <-r.btcClient.BlockEventChan():
 			//delay block processing until the block is mature
 			for {
+				select {
+				case <-quit:
+					return
+				default:
+				}
+
 				_, h, err := r.btcClient.GetBestBlock()
 				if err != nil {
 					r.logger.Warnf("Failed to get best block from BTC client: %v", err)
