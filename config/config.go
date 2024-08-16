@@ -24,11 +24,12 @@ var (
 
 // Config defines the server's top level configuration
 type Config struct {
-	Common   CommonConfig         `mapstructure:"common"`
-	BTC      BTCConfig            `mapstructure:"btc"`
-	Lorenzo  lrzcfg.LorenzoConfig `mapstructure:"lorenzo"`
-	Metrics  MetricsConfig        `mapstructure:"metrics"`
-	Reporter ReporterConfig       `mapstructure:"reporter"`
+	Common      CommonConfig         `mapstructure:"common"`
+	BTC         BTCConfig            `mapstructure:"btc"`
+	Lorenzo     lrzcfg.LorenzoConfig `mapstructure:"lorenzo"`
+	Metrics     MetricsConfig        `mapstructure:"metrics"`
+	Reporter    ReporterConfig       `mapstructure:"reporter"`
+	BNBReporter BNBReporterConfig    `mapstructure:"bnbreporter"`
 }
 
 func (cfg *Config) Validate() error {
@@ -50,6 +51,10 @@ func (cfg *Config) Validate() error {
 
 	if err := cfg.Reporter.Validate(); err != nil {
 		return fmt.Errorf("invalid config in reporter: %w", err)
+	}
+
+	if err := cfg.BNBReporter.Validate(); err != nil {
+		return fmt.Errorf("invalid config in bnbreporter: %w", err)
 	}
 
 	return nil
