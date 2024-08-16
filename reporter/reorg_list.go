@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	sdkmath "cosmossdk.io/math"
-	btclightclienttypes "github.com/Lorenzo-Protocol/lorenzo/x/btclightclient/types"
+	btclightclienttypes "github.com/Lorenzo-Protocol/lorenzo/v3/x/btclightclient/types"
 	"github.com/btcsuite/btcd/wire"
 )
 

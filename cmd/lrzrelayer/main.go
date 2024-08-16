@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Lorenzo-Protocol/lorenzo/app/params"
+	"github.com/Lorenzo-Protocol/lorenzo/v3/app/params"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/cmd/lrzrelayer/cmd"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/cmd/lrzrelayer/cmd"
 )
 
 func main() {

@@ -11,7 +11,7 @@ import (
 	"github.com/pebbe/zmq4"
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 var (

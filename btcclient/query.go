@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 // GetBestBlock provides similar functionality with the btcd.rpcclient.GetBestBlock function

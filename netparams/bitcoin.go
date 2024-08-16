@@ -5,7 +5,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 func GetBTCParams(net string) (*chaincfg.Params, error) {

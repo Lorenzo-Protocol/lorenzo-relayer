@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	lrzcfg "github.com/Lorenzo-Protocol/lorenzo-sdk/config"
+	lrzcfg "github.com/Lorenzo-Protocol/lorenzo-sdk/v3/config"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

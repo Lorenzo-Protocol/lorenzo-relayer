@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
 )
 
 func Start(addr string, reg *prometheus.Registry) {

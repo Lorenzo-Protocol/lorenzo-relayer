@@ -10,7 +10,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	zmq "github.com/pebbe/zmq4"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 // SequenceMsg is a subscription event coming from a "sequence" ZMQ message.

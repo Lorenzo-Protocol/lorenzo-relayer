@@ -7,8 +7,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 type BTCClient interface {
