@@ -39,3 +39,4 @@ reporter:
 bnbreporter:
   rpc_url: https://bsc-testnet.bnbchain.org
   delay_blocks: 15
+  base_height: 43057781

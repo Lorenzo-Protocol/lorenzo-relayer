@@ -7,11 +7,13 @@ import (
 
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/bnbclient"
 	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/bnbclient/bnbtypes"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
 )
 
 const DefaultBNBDelayBlocks = 15
 
 type BNBReporter struct {
+	cfg           *config.BNBReporterConfig
 	logger        *zap.SugaredLogger
 	delayBlocks   uint64
 	lorenzoClient LorenzoClient
@@ -22,20 +24,22 @@ type BNBReporter struct {
 	lorenzoTip *bnbtypes.Header // Last BNB BlockNumber reported to Lorenzo
 }
 
-func New(parentLogger *zap.Logger, lorenzoClient LorenzoClient, delayBlocks uint64, rpcUrl string) (*BNBReporter, error) {
+func New(parentLogger *zap.Logger, lorenzoClient LorenzoClient, cfg *config.BNBReporterConfig) (*BNBReporter, error) {
 	logger := parentLogger.With(zap.String("module", "BNB-reporter")).Sugar()
 
-	client, err := bnbclient.New(rpcUrl)
+	client, err := bnbclient.New(cfg.RpcUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	if delayBlocks == 0 {
-		delayBlocks = DefaultBNBDelayBlocks
+	if cfg.DelayBlocks == 0 {
+		cfg.DelayBlocks = DefaultBNBDelayBlocks
 	}
+
 	return &BNBReporter{
+		cfg:           cfg,
 		logger:        logger,
-		delayBlocks:   delayBlocks,
+		delayBlocks:   cfg.DelayBlocks,
 		lorenzoClient: lorenzoClient,
 		client:        client,
 		quit:          make(chan struct{}),

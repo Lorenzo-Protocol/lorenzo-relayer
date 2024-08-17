@@ -39,15 +39,7 @@ func (r *BNBReporter) boostrap() error {
 }
 
 func (r *BNBReporter) initLorenzoBNBBaseHeader() error {
-	bnbTipHeader, err := r.client.LatestHeader()
-	if err != nil {
-		return err
-	}
-	baseHeaderHeight := bnbTipHeader.Number.Int64() - baseBNBHeaderHeightDepth
-	if baseHeaderHeight < 0 {
-		baseHeaderHeight = 0
-	}
-	baseHeader, err := r.client.HeaderByNumber(uint64(baseHeaderHeight))
+	baseHeader, err := r.client.HeaderByNumber(r.cfg.BaseHeight)
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ func bnbReporterAction(cmd *cobra.Command, args []string) {
 		panic(fmt.Errorf("failed to open Lorenzo client: %w", err))
 	}
 
-	bnbReporter, err := bnbreporter.New(rootLogger, lorenzoClient, cfg.BNBReporter.DelayBlocks, cfg.BNBReporter.RpcUrl)
+	bnbReporter, err := bnbreporter.New(rootLogger, lorenzoClient, &cfg.BNBReporter)
 	if err != nil {
 		panic(fmt.Errorf("failed to create BNB reporter: %w", err))
 	}
