@@ -78,6 +78,10 @@ func (r *BNBReporter) WaitBNBCatchUp() error {
 	if bnbTipNumber > r.lorenzoTip.Number.Uint64() {
 		return nil
 	}
+	defer func(starTime time.Time) {
+		r.logger.Infof("Wait BNB tip: %d catch up to Lorenzo tip: %d, time used: %v",
+			bnbTipNumber, r.lorenzoTip.Number.Uint64(), time.Since(starTime))
+	}(time.Now())
 
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
@@ -101,6 +105,10 @@ func (r *BNBReporter) WaitLorenzoCatchUp() error {
 		return nil
 	}
 	catchUpToNumber := bnbTip.Number.Uint64() - r.delayBlocks
+	defer func(starTime time.Time) {
+		r.logger.Infof("Wait Lorenzo tip: %d catch up to BNB  close tip: %d, BNB tip:%d, time used: %v",
+			r.lorenzoTip.Number.Uint64(), catchUpToNumber, bnbTip.Number.Uint64(), time.Since(starTime))
+	}(time.Now())
 
 	batchHeaderCh := make(chan []*bnbtypes.Header, 10)
 	go func() {

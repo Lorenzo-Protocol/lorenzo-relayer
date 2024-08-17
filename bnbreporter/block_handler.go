@@ -11,6 +11,8 @@ import (
 )
 
 func (r *BNBReporter) mainLoop() {
+	r.logger.Infof("=======BNB reporter start syncheaders=========")
+
 	networkErrorTimeSleep := time.Millisecond * 100
 	blockSleepTime := time.Second
 	for {
@@ -27,7 +29,9 @@ func (r *BNBReporter) mainLoop() {
 			continue
 		}
 
-		if r.delayBlocks+r.lorenzoTip.Number.Uint64()+1 < bnbTip.Number.Uint64() {
+		if r.delayBlocks+r.lorenzoTip.Number.Uint64()+1 > bnbTip.Number.Uint64() {
+			r.logger.Debugf("delay blocks: %d, lorenzoTip: %d, bnbTip: %d",
+				r.delayBlocks, r.lorenzoTip.Number.Uint64(), bnbTip.Number.Uint64())
 			time.Sleep(blockSleepTime)
 			continue
 		}
@@ -42,7 +46,6 @@ func (r *BNBReporter) mainLoop() {
 			r.logger.Warnf("failed to handle header: %v", err)
 			if err := r.boostrap(); err != nil {
 				r.logger.Errorf("failed to bootstrap: %v", err)
-				return
 			}
 			continue
 		}
