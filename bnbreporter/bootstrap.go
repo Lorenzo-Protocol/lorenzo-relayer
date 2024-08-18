@@ -56,8 +56,8 @@ func (r *BNBReporter) initLorenzoBNBBaseHeader() error {
 	if err != nil {
 		return err
 	}
-	r.logger.Infof("uploaded base BNB header to lorenzo,height: %d, hash:%s", baseHeader.Number.Uint64(), baseHeader.Hash().Hex())
-	time.Sleep(time.Second * 3)
+	r.logger.Infof("uploaded base BNB header to lorenzo,height: %d, hash:%s",
+		baseHeader.Number.Uint64(), baseHeader.Hash().Hex())
 
 	return r.boostrap()
 }
