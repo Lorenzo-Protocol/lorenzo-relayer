@@ -13,7 +13,7 @@ import (
 func (r *BNBReporter) mainLoop() {
 	r.logger.Infof("=======BNB reporter start syncheaders=========")
 
-	networkErrorTimeSleep := time.Millisecond * 100
+	networkErrorTimeSleep := time.Millisecond * 300
 	blockSleepTime := time.Second
 	for {
 		select {
@@ -38,6 +38,10 @@ func (r *BNBReporter) mainLoop() {
 
 		start := r.lorenzoTip.Number.Uint64() + 1
 		end := bnbTip.Number.Uint64() - r.delayBlocks
+		if end-start+1 > FetchBNBHeaderBatchSize {
+			end = start + FetchBNBHeaderBatchSize - 1
+		}
+
 		newHeaders, err := r.client.RangeHeaders(start, end)
 		if err != nil {
 			r.logger.Errorf("failed to get BNB headers: %v", err)

@@ -122,6 +122,7 @@ func (r *BNBReporter) WaitLorenzoCatchUp() error {
 				return
 			}
 			batchHeaderCh <- headers
+			time.Sleep(time.Second)
 		}
 	}()
 	for {
