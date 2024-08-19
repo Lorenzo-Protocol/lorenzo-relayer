@@ -36,14 +36,16 @@ func (r *BNBReporter) mainLoop() {
 			continue
 		}
 
-		newHeader, err := r.client.HeaderByNumber(r.lorenzoTip.Number.Uint64() + 1)
+		start := r.lorenzoTip.Number.Uint64() + 1
+		end := bnbTip.Number.Uint64() - r.delayBlocks
+		newHeaders, err := r.client.RangeHeaders(start, end)
 		if err != nil {
-			r.logger.Errorf("failed to get BNB header by number: %v", err)
+			r.logger.Errorf("failed to get BNB headers: %v", err)
 			time.Sleep(networkErrorTimeSleep)
 			continue
 		}
-		if err := r.handleHeader(newHeader); err != nil {
-			r.logger.Warnf("failed to handle header: %v", err)
+		if err := r.handleHeaders(newHeaders); err != nil {
+			r.logger.Warnf("failed to handle headers: %v", err)
 			if err := r.boostrap(); err != nil {
 				r.logger.Errorf("failed to bootstrap: %v", err)
 			}
@@ -51,18 +53,22 @@ func (r *BNBReporter) mainLoop() {
 		}
 
 		// update lorenzoTip after successfully handling the header
-		r.lorenzoTip = newHeader
+		r.lorenzoTip = newHeaders[len(newHeaders)-1]
 	}
 }
 
 func (r *BNBReporter) handleHeader(newHeader *bnbtypes.Header) error {
+	if newHeader == nil {
+		return nil
+	}
+
 	startTime := time.Now()
 	if newHeader.Number.Uint64() != r.lorenzoTip.Number.Uint64()+1 {
 		return fmt.Errorf("newHeader number %d is not the next block of lorenzoTip number %d", newHeader.Number.Uint64(), r.lorenzoTip.Number.Uint64())
 	}
 	if r.lorenzoTip.Hash() != newHeader.ParentHash {
 		err := fmt.Errorf("BNB chain is inconsistent with Lorenzo chain: k-deep(%d) block in Lorenzo header chain: %s", r.delayBlocks, newHeader.Hash().Hex())
-		panic(err)
+		return err
 	}
 
 	lorenzoBNBHeaders, err := ConvertBNBHeaderToLorenzoBNBHeaders([]*bnbtypes.Header{newHeader})
@@ -96,7 +102,7 @@ func (r *BNBReporter) handleHeaders(newHeaders []*bnbtypes.Header) error {
 	}
 	if newHeaders[0].ParentHash != r.lorenzoTip.Hash() {
 		err := fmt.Errorf("BNB chain is inconsistent with Lorenzo chain: k-deep(%d) block in Lorenzo header chain: %s", r.delayBlocks, newHeaders[0].Hash().Hex())
-		panic(err)
+		return err
 	}
 
 	lorenzoBNBHeaders, err := ConvertBNBHeaderToLorenzoBNBHeaders(newHeaders)
