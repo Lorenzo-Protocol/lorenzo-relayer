@@ -6,10 +6,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/btcclient"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/metrics"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 const (

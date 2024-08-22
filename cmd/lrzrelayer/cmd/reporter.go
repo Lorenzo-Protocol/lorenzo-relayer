@@ -3,13 +3,13 @@ package cmd
 import (
 	"fmt"
 
-	lrzclient "github.com/Lorenzo-Protocol/lorenzo-sdk/client"
+	lrzclient "github.com/Lorenzo-Protocol/lorenzo-sdk/v3/client"
 	"github.com/spf13/cobra"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/btcclient"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/metrics"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/reporter"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/btcclient"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/metrics"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/reporter"
 )
 
 // GetReporterCmd returns the CLI commands for the reporter

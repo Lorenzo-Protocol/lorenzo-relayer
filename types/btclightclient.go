@@ -1,8 +1,8 @@
 package types
 
 import (
-	lorenzotypes "github.com/Lorenzo-Protocol/lorenzo/types"
-	btcltypes "github.com/Lorenzo-Protocol/lorenzo/x/btclightclient/types"
+	lorenzotypes "github.com/Lorenzo-Protocol/lorenzo/v3/types"
+	btcltypes "github.com/Lorenzo-Protocol/lorenzo/v3/x/btclightclient/types"
 )
 
 func NewMsgInsertHeaders(

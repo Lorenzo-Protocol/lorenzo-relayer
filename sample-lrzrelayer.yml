@@ -35,3 +35,8 @@ reporter:
   btc_cache_size: 1000
   max_headers_in_msg: 100
   delay_blocks: 3
+
+bnbreporter:
+  rpc_url: https://bsc-testnet.bnbchain.org
+  delay_blocks: 15
+  base_height: 43057781

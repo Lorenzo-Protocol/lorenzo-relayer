@@ -6,10 +6,10 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
-	btclctypes "github.com/Lorenzo-Protocol/lorenzo/x/btclightclient/types"
+	"github.com/Lorenzo-Protocol/lorenzo/v3/types/retry"
+	btclctypes "github.com/Lorenzo-Protocol/lorenzo/v3/x/btclightclient/types"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 func chunkBy[T any](items []T, chunkSize int) (chunks [][]T) {

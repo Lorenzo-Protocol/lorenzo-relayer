@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Lorenzo-Protocol/lorenzo/types/retry"
+	"github.com/Lorenzo-Protocol/lorenzo/v3/types/retry"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"go.uber.org/zap"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/config"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/netparams"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/zmq"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/config"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/netparams"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/zmq"
 )
 
 // NewWithBlockSubscriber creates a new BTC client that subscribes to newly connected/disconnected blocks

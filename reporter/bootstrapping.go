@@ -9,7 +9,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 
-	"github.com/Lorenzo-Protocol/lorenzo-relayer/types"
+	"github.com/Lorenzo-Protocol/lorenzo-relayer/v2/types"
 )
 
 const (
