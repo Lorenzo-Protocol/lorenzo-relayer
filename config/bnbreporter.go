@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type BNBReporterConfig struct {
 	RpcUrl      string `mapstructure:"rpc_url"`
@@ -12,5 +15,12 @@ func (cfg *BNBReporterConfig) Validate() error {
 	if cfg.RpcUrl == "" {
 		return fmt.Errorf("rpc url cannot be empty")
 	}
+	if cfg.BaseHeight == 0 {
+		return errors.New("BNB base height cannot be 0")
+	}
+	if cfg.DelayBlocks == 0 {
+		return errors.New("BNB delay blocks cannot be 0")
+	}
+
 	return nil
 }
