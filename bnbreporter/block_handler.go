@@ -11,7 +11,7 @@ import (
 )
 
 func (r *BNBReporter) mainLoop() {
-	r.logger.Infof("=======BNB reporter start syncheaders=========")
+	r.logger.Infof("=======BNB reporter start syncer=========")
 
 	networkErrorTimeSleep := time.Millisecond * 300
 	blockSleepTime := time.Second
