@@ -53,6 +53,8 @@ func (r *BNBReporter) mainLoop() {
 			if err := r.boostrap(); err != nil {
 				r.logger.Errorf("failed to bootstrap: %v", err)
 			}
+
+			time.Sleep(networkErrorTimeSleep)
 			continue
 		}
 
