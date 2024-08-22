@@ -37,9 +37,10 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("invalid config in common: %w", err)
 	}
 
-	if err := cfg.BTC.Validate(); err != nil {
-		return fmt.Errorf("invalid config in btc: %w", err)
-	}
+	// move to reporter
+	//if err := cfg.BTC.Validate(); err != nil {
+	//	return fmt.Errorf("invalid config in btc: %w", err)
+	//}
 
 	if err := cfg.Lorenzo.Validate(); err != nil {
 		return fmt.Errorf("invalid config in lorenzo: %w", err)
@@ -49,13 +50,14 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("invalid config in metrics: %w", err)
 	}
 
-	if err := cfg.Reporter.Validate(); err != nil {
-		return fmt.Errorf("invalid config in reporter: %w", err)
-	}
-
-	if err := cfg.BNBReporter.Validate(); err != nil {
-		return fmt.Errorf("invalid config in bnbreporter: %w", err)
-	}
+	// Move to reporter
+	//if err := cfg.Reporter.Validate(); err != nil {
+	//	return fmt.Errorf("invalid config in reporter: %w", err)
+	//}
+	// Move to bnbreporter
+	//if err := cfg.BNBReporter.Validate(); err != nil {
+	//	return fmt.Errorf("invalid config in bnbreporter: %w", err)
+	//}
 
 	return nil
 }

@@ -27,6 +27,10 @@ func bnbReporterAction(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
+	if err := cfg.BNBReporter.Validate(); err != nil {
+		panic(fmt.Errorf("invalid config in bnbreporter: %w", err))
+	}
+
 	rootLogger, err := cfg.CreateLogger()
 	if err != nil {
 		panic(fmt.Errorf("failed to create logger: %w", err))

@@ -34,6 +34,13 @@ func GetReporterCmd() *cobra.Command {
 			if err != nil {
 				panic(fmt.Errorf("failed to load config: %w", err))
 			}
+			if err := cfg.Reporter.Validate(); err != nil {
+				panic(fmt.Errorf("invalid config in reporter: %w", err))
+			}
+			if err := cfg.BTC.Validate(); err != nil {
+				panic(fmt.Errorf("invalid config in btc: %w", err))
+			}
+
 			rootLogger, err := cfg.CreateLogger()
 			if err != nil {
 				panic(fmt.Errorf("failed to create logger: %w", err))
