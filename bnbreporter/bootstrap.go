@@ -21,9 +21,7 @@ func (r *BNBReporter) boostrap() error {
 	lorenzoBNBHeader, err := r.lorenzoClient.BNBLatestHeader()
 	if err != nil {
 		if strings.Contains(err.Error(), errLatestBNBHeaderNotFound.Error()) {
-			if err := r.initLorenzoBNBBaseHeader(); err != nil {
-				return err
-			}
+			return r.initLorenzoBNBBaseHeader()
 		} else {
 			return err
 		}
